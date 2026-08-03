@@ -1,7 +1,8 @@
 import "@babylonjs/loaders/glTF";
 import { ImportMeshAsync } from "@babylonjs/core/Loading/sceneLoader";
 
-const excavationSceneUrl = new URL("../../models/ExcavationScene.glb", import.meta.url).href;
+const publicAssetUrl = (path) => `${import.meta.env.BASE_URL}${path}`;
+const excavationSceneUrl = publicAssetUrl("models/ExcavationScene.glb");
 const TRENCH_COLLIDER_NAME = "COL_Trench_Barrier_WORKSITE";
 const TRENCH_WORKSITE_NAME = "Excavation_Trench";
 export const BIG_SHIELD_NAME = "Big_Shield";

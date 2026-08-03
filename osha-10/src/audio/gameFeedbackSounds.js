@@ -1,11 +1,5 @@
-const correctAnswerUrl = new URL(
-    "../../Sound Effects/Correct Answer.mp3",
-    import.meta.url
-).href;
-const wrongAnswerUrl = new URL(
-    "../../Sound Effects/Wrong Answer.wav",
-    import.meta.url
-).href;
+const correctAnswerUrl = `${import.meta.env.BASE_URL}Sound Effects/Correct Answer.mp3`;
+const wrongAnswerUrl = `${import.meta.env.BASE_URL}Sound Effects/Wrong Answer.wav`;
 
 function createSound(url, volume) {
     const audio = new Audio(url);

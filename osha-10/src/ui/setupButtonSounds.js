@@ -1,7 +1,4 @@
-const buttonSoundUrl = new URL(
-    "../../Sound Effects/Mechanism Button.mp3",
-    import.meta.url
-).href;
+const buttonSoundUrl = `${import.meta.env.BASE_URL}Sound Effects/Mechanism Button.mp3`;
 
 const BUTTON_SOUND_VOLUME = 0.35;
 

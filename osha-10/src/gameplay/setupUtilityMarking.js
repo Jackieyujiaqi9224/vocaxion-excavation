@@ -3,10 +3,7 @@ import {
     playWrongAnswerSound,
 } from "../audio/gameFeedbackSounds.js";
 
-const excavationBirdViewUrl = new URL(
-    "../../2D Assets/excavationbirdview.png",
-    import.meta.url
-).href;
+const excavationBirdViewUrl = `${import.meta.env.BASE_URL}2D Assets/excavationbirdview.png`;
 
 const FLAG_SOURCE_POSITIONS = [
     { x: 950, y: 232 },

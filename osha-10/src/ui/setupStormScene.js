@@ -3,14 +3,8 @@ import {
     playWrongAnswerSound,
 } from "../audio/gameFeedbackSounds.js";
 
-const stormImageUrl = new URL(
-    "../../Graphic Novel/Storm.png",
-    import.meta.url
-).href;
-const headshotImageUrl = new URL(
-    "../../Graphic Novel/Headshot.png",
-    import.meta.url
-).href;
+const stormImageUrl = `${import.meta.env.BASE_URL}Graphic Novel/Storm.png`;
+const headshotImageUrl = `${import.meta.env.BASE_URL}Graphic Novel/Headshot.png`;
 
 export function setupStormScene() {
     const screen = document.getElementById("stormScene");
