@@ -13,21 +13,32 @@ canvas.addEventListener("webglcontextrestored", () => {
     console.log("WebGL context was restored.");
 });
 
-const webglContext =
-    canvas.getContext("webgl2", { antialias: true }) ??
-    canvas.getContext("webgl", { antialias: true });
-
-if (!webglContext) {
-    throw new Error("WebGL is required to run the excavation scene.");
-}
-
-// Supplying a WebGL context directly keeps Babylon on its WebGL renderer even
-// when the browser also supports WebGPU.
-const engine = new Engine(webglContext, true);
+const engine = new Engine(canvas, true);
 
 setupInterface();
 
 const scene = await createScene({ engine, canvas });
 
-engine.runRenderLoop(() => scene.render());
+const diagnostics = {
+    engine,
+    scene,
+    framesRendered: 0,
+};
+window.__excavationDebug = diagnostics;
+
+engine.runRenderLoop(() => {
+    scene.render();
+    diagnostics.framesRendered += 1;
+
+    if (diagnostics.framesRendered === 1) {
+        console.info("Excavation scene rendered its first frame.", {
+            webGLVersion: engine.webGLVersion,
+            renderSize: [engine.getRenderWidth(), engine.getRenderHeight()],
+            activeCamera: scene.activeCamera?.name ?? null,
+            meshes: scene.meshes.length,
+            activeMeshes: scene.getActiveMeshes().length,
+            ready: scene.isReady(),
+        });
+    }
+});
 window.addEventListener("resize", () => engine.resize());

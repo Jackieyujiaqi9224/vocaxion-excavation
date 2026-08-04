@@ -5,7 +5,9 @@ export default defineConfig({
     build: {
         outDir: "dist",
         emptyOutDir: true,
-        minify: true,
-        sourcemap: false,
+        // Keep the diagnostic build readable while isolating a Chromium-only
+        // failure that occurs after Vite's production transform.
+        minify: false,
+        sourcemap: true,
     },
 });
