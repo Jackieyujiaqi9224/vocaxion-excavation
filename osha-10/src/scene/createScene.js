@@ -5,7 +5,6 @@ import {
     Scene,
     Vector3,
 } from "@babylonjs/core";
-import "@babylonjs/inspector";
 
 import { createNavigationArrow } from "../gameplay/createNavigationArrow.js";
 import { setupConeHazard } from "../gameplay/setupConeHazard.js";
@@ -39,13 +38,19 @@ function configureEnvironment(scene) {
 }
 
 function setupInspectorShortcut(scene) {
-    window.addEventListener("keydown", (event) => {
+    let inspectorPromise;
+
+    window.addEventListener("keydown", async (event) => {
         if (event.code !== "KeyI" || event.repeat) return;
 
         if (scene.debugLayer.isVisible()) {
             scene.debugLayer.hide();
         } else {
-            scene.debugLayer.show();
+            // The inspector is several megabytes and is only needed on demand.
+            // Keep it out of the initial gameplay bundle.
+            inspectorPromise ??= import("@babylonjs/inspector");
+            await inspectorPromise;
+            await scene.debugLayer.show();
         }
     });
 }

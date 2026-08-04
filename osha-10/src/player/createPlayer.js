@@ -4,7 +4,7 @@ const PLAYER_SPAWN = new Vector3(-3, 0, 100);
 const PLAYER_MODEL_NAME = "COL_Player";
 
 export function createPlayer(scene) {
-    const playerModel = scene.getTransformNodeByName(PLAYER_MODEL_NAME);
+    const playerModel = scene.getNodeByName(PLAYER_MODEL_NAME);
     if (!playerModel) {
         throw new Error(`Excavation scene is missing ${PLAYER_MODEL_NAME}`);
     }
