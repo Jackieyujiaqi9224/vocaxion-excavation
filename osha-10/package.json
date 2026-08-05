@@ -9,11 +9,28 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@babylonjs/inspector": "8.56.2",
-    "vite": "^7.3.1"
+    "vite": "^5.4.19"
   },
   "dependencies": {
+    "@babylonjs/addons": "8.56.2",
     "@babylonjs/core": "8.56.2",
-    "@babylonjs/loaders": "8.56.2"
+    "@babylonjs/gui": "8.56.2",
+    "@babylonjs/gui-editor": "8.56.2",
+    "@babylonjs/inspector": "8.56.2",
+    "@babylonjs/loaders": "8.56.2",
+    "@babylonjs/materials": "8.56.2",
+    "@babylonjs/serializers": "8.56.2",
+    "@fluentui-contrib/react-resize-handle": "^0.8.4",
+    "@fluentui-contrib/react-virtualizer": "^1.0.0",
+    "@fluentui/react-components": "^9.74.5",
+    "@fluentui/react-icons": "2.0.316",
+    "@fluentui/react-motion-components-preview": "^0.15.6",
+    "@fluentui/react-utilities": "^9.26.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "usehooks-ts": "^3.1.1"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
