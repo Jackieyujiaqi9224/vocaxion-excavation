@@ -20,6 +20,8 @@ export function setupStormScene() {
     let transitionTimer = null;
     let returnTimer = null;
     let page = 0;
+    let completionNotified = false;
+    const completionListeners = new Set();
 
     background.src = stormImageUrl;
     headshot.src = headshotImageUrl;
@@ -52,6 +54,10 @@ export function setupStormScene() {
                 isActive = false;
                 document.querySelector("#mentorMessage p").textContent =
                     "Now that the storm has subsided, reevaluate the site to determine whether it is still safe to continue working.";
+                if (!completionNotified) {
+                    completionNotified = true;
+                    completionListeners.forEach((listener) => listener());
+                }
                 document.getElementById("renderCanvas").focus();
             },
             { once: true }
@@ -99,9 +105,13 @@ export function setupStormScene() {
     };
 
     return {
-        showAfterDelay(delay = 1000) {
+        activate(delay = 1000) {
             if (isActive || transitionTimer !== null) return;
             transitionTimer = window.setTimeout(show, delay);
+        },
+        onComplete(listener) {
+            completionListeners.add(listener);
+            return () => completionListeners.delete(listener);
         },
         isActive: () => isActive,
     };

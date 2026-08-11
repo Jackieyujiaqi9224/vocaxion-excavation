@@ -7,10 +7,16 @@ import {
 } from "@babylonjs/core";
 
 import { createNavigationArrow } from "../gameplay/createNavigationArrow.js";
-import { setupConeHazard } from "../gameplay/setupConeHazard.js";
-import { setupHazardIdentification } from "../gameplay/setupHazardIdentification.js";
+import {
+    initialHazardDefinitions,
+    postStormHazardDefinitions,
+} from "../gameplay/hazardDefinitions.js";
+import { setupClickableHazard } from "../gameplay/setupClickableHazard.js";
+import {
+    GAME_PHASES,
+    setupGameFlow,
+} from "../gameplay/setupGameFlow.js";
 import { setupHazardHint } from "../gameplay/setupHazardHint.js";
-import { setupTrenchInteraction } from "../gameplay/setupTrenchInteraction.js";
 import { setupTrenchObjective } from "../gameplay/setupTrenchObjective.js";
 import { setupTrenchPlanner } from "../gameplay/setupTrenchPlanner.js";
 import { setupUtilityMarking } from "../gameplay/setupUtilityMarking.js";
@@ -18,6 +24,7 @@ import { createPlayer } from "../player/createPlayer.js";
 import { createThirdPersonCamera } from "../player/createThirdPersonCamera.js";
 import { setupInput } from "../player/setupInput.js";
 import { setupMovement } from "../player/setupMovement.js";
+import { setupModuleCompletion } from "../ui/setupModuleCompletion.js";
 import { setupStormScene } from "../ui/setupStormScene.js";
 import { loadExcavationSite } from "../world/loadExcavationSite.js";
 
@@ -59,10 +66,11 @@ export async function createScene({ engine, canvas }) {
     const scene = new Scene(engine);
     configureEnvironment(scene);
     const stormScene = setupStormScene();
+    const moduleCompletion = setupModuleCompletion();
     const utilityMarking = setupUtilityMarking({ canvas });
 
     const trench = await loadExcavationSite(scene);
-    const player = createPlayer(scene);
+    const player = await createPlayer(scene);
     const { cameraTarget } = createThirdPersonCamera(scene, player);
     const input = setupInput(scene);
     const trenchPlanner = setupTrenchPlanner({
@@ -70,17 +78,34 @@ export async function createScene({ engine, canvas }) {
         canvas,
         player,
         trench,
-        onReturnToMainScene: () => stormScene.showAfterDelay(1000),
     });
-    const hazards = setupHazardIdentification({
-        scene,
-        canvas,
-        isUnavailable: trenchPlanner.isOpen,
-    });
-    const coneHazard = setupConeHazard({
-        scene,
-        canvas,
-        isUnavailable: () => trenchPlanner.isOpen() || hazards.isOpen(),
+    const allHazardSystems = [];
+    const createHazardSystems = (definitions) => definitions.map(
+        (definition) => {
+            const system = setupClickableHazard({
+                scene,
+                canvas,
+                definition,
+                isUnavailable: () =>
+                    allHazardSystems.some((hazard) => hazard.isOpen()),
+            });
+            allHazardSystems.push(system);
+            return system;
+        }
+    );
+    const siteHazardSystems = createHazardSystems(
+        initialHazardDefinitions
+    );
+    const postStormHazardSystems = createHazardSystems(
+        postStormHazardDefinitions
+    );
+    const gameFlow = setupGameFlow({
+        utilityMarking,
+        siteHazardSystems,
+        postStormHazardSystems,
+        trenchPlanner,
+        stormScene,
+        moduleCompletion,
     });
     const navigationArrow = createNavigationArrow(scene, player);
 
@@ -88,46 +113,43 @@ export async function createScene({ engine, canvas }) {
         scene,
         player,
         navigationArrow,
-        hazardSystems: [hazards, coneHazard],
-        isUnavailable: () =>
-            trenchPlanner.isOpen() || hazards.isOpen() || coneHazard.isOpen(),
+        hazardSystems: allHazardSystems,
+        isUnavailable: gameFlow.isMovementPaused,
     });
-
-    const hazardSystems = [hazards, coneHazard];
-    const allHazardsResolved = () =>
-        hazardSystems.every(
-            (system) => system.getUnresolvedMeshes().length === 0
-        );
 
     setupTrenchObjective({
         scene,
-        engine,
-        trench,
-        hazardSystems,
-        openPlanner: trenchPlanner.open,
         isPlannerOpen: trenchPlanner.isOpen,
-        isPlannerComplete: trenchPlanner.isComplete,
+        states: [
+            {
+                id: GAME_PHASES.TRENCH_PLANNING,
+                buttonLabel: "Set up trench",
+                openPlanner: trenchPlanner.open,
+                isEnabled: () =>
+                    gameFlow.isPhase(GAME_PHASES.TRENCH_PLANNING),
+            },
+            {
+                id: GAME_PHASES.POST_STORM_REINSPECTION,
+                buttonLabel: "Reinspect trench",
+                openPlanner: trenchPlanner.openReinspection,
+                isEnabled: () =>
+                    gameFlow.isPhase(
+                        GAME_PHASES.POST_STORM_REINSPECTION
+                    ),
+                completionMessage:
+                    "The storm water has been mitigated. Reinspect the trench walls, shielding, and safe egress before work resumes.",
+            },
+        ],
     });
-    setupTrenchInteraction(
-        scene,
-        player,
-        trench,
-        trenchPlanner.open,
-        () => allHazardsResolved() && !trenchPlanner.isComplete()
-    );
     setupMovement({
         scene,
         player,
         cameraTarget,
         input,
-        isPaused: () =>
-            utilityMarking.isActive() ||
-            trenchPlanner.isOpen() ||
-            hazards.isOpen() ||
-            coneHazard.isOpen() ||
-            stormScene.isActive(),
+        isPaused: gameFlow.isMovementPaused,
     });
     setupInspectorShortcut(scene);
+    gameFlow.start();
 
     return scene;
 }

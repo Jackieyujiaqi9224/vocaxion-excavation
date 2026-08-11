@@ -1,5 +1,6 @@
 import {
     Color3,
+    HighlightLayer,
     Matrix,
     MeshBuilder,
     PointerDragBehavior,
@@ -7,6 +8,7 @@ import {
     UniversalCamera,
     Vector3,
 } from "@babylonjs/core";
+import { ImportMeshAsync } from "@babylonjs/core/Loading/sceneLoader";
 import {
     playCorrectAnswerSound,
     playWrongAnswerSound,
@@ -17,6 +19,9 @@ import {
 } from "../world/loadExcavationSite.js";
 
 const CAMERA_POSITION_NAME = "Camera Position";
+const COMPLETION_DIALOG_DELAY_MS = 1000;
+const EGRESS_LADDER_URL =
+    `${import.meta.env.BASE_URL}models/SCAFFOLD%20LADDER.glb`;
 const DEPTH_TOP_NAME = "y1";
 const MEASUREMENT_CROSS_NAME = "yx cross";
 const WIDTH_LEFT_NAME = "x1";
@@ -63,12 +68,27 @@ export function setupTrenchPlanner({
     canvas,
     player,
     trench,
-    onReturnToMainScene,
 }) {
     const planner = document.getElementById("trenchPlanner");
+    const plannerTitle = document.getElementById("trenchPlannerTitle");
+    const planningSidebar = document.getElementById("trenchPlanningSidebar");
+    const reinspectionPanel = document.getElementById(
+        "trenchReinspectionPanel"
+    );
+    const reinspectionInstruction = document.getElementById(
+        "trenchReinspectionInstruction"
+    );
+    const wallsInspection = document.getElementById("trenchWallsInspection");
+    const shieldInspection = document.getElementById(
+        "trenchShieldInspection"
+    );
+    const egressInspection = document.getElementById(
+        "trenchEgressInspection"
+    );
+    const completeReinspectionButton = document.getElementById(
+        "completeTrenchReinspection"
+    );
     const emptyMessage = document.getElementById("emptyTrenchMessage");
-    const deviceCount = document.getElementById("deviceCount");
-    const clearButton = document.getElementById("clearDevices");
     const reportButton = document.getElementById("openGeotechnicalReport");
     const reportDialog = document.getElementById("geotechnicalReport");
     const closeReportButton = document.getElementById(
@@ -120,6 +140,9 @@ export function setupTrenchPlanner({
         "configurationFeedback"
     );
     const deviceFeedback = document.getElementById("deviceFeedback");
+    const egressSection = document.getElementById("egressSection");
+    const addEgressButton = document.getElementById("addEgress");
+    const egressFeedback = document.getElementById("egressFeedback");
     const configurationSection = document.getElementById(
         "protectionConfiguration"
     );
@@ -147,11 +170,32 @@ export function setupTrenchPlanner({
 
     const placedDevices = [];
     let isOpen = false;
+    let plannerMode = null;
     let selectedProtection = null;
     let selectedConfiguration = null;
     let configuredShield = null;
+    let placedEgress = null;
+    let isEgressLoading = false;
+    let isShieldPlacementAccepted = false;
     let previousCamera = null;
     let isComplete = false;
+    let completionNotified = false;
+    const completionListeners = new Set();
+    let isReinspectionComplete = false;
+    const inspectedItems = new Set();
+    const reinspectionCompletionListeners = new Set();
+    const reinspectionHighlight = new HighlightLayer(
+        "trenchReinspectionHighlight",
+        scene
+    );
+    reinspectionHighlight.innerGlow = false;
+    const reinspectionHighlightColor = new Color3(0.2, 0.82, 0.58);
+    const authoredWallMeshes = trench.meshes.filter((mesh) =>
+        mesh.name.includes("Dirt_Edge")
+    );
+    const trenchWallMeshes = authoredWallMeshes.length > 0
+        ? authoredWallMeshes
+        : trench.meshes;
 
     const cameraPosition = scene.getTransformNodeByName(CAMERA_POSITION_NAME);
     if (!cameraPosition) {
@@ -251,9 +295,8 @@ export function setupTrenchPlanner({
 
     scene.onBeforeRenderObservable.add(positionMeasurementGuides);
 
-    const updateDeviceCount = () => {
+    const updateWorkspaceState = () => {
         const count = placedDevices.length;
-        deviceCount.textContent = `${count} device${count === 1 ? "" : "s"} placed`;
         emptyMessage.classList.toggle("is-hidden", count > 0);
     };
 
@@ -301,7 +344,7 @@ export function setupTrenchPlanner({
         device.addBehavior(dragBehavior);
 
         placedDevices.push(device);
-        updateDeviceCount();
+        updateWorkspaceState();
     };
 
     const removeConfiguredShield = () => {
@@ -313,7 +356,7 @@ export function setupTrenchPlanner({
         if (index >= 0) placedDevices.splice(index, 1);
         configuredShield.dispose();
         configuredShield = null;
-        updateDeviceCount();
+        updateWorkspaceState();
     };
 
     const placeShield = (prefabName) => {
@@ -456,13 +499,84 @@ export function setupTrenchPlanner({
             );
             dragCollider.metadata.snapIndex = initialSnapIndex;
         }
+        dragBehavior.enabled = prefabName === BIG_SHIELD_NAME;
         dragCollider.addBehavior(dragBehavior);
         dragCollider.metadata.dragBehavior = dragBehavior;
 
         configuredShield = dragCollider;
         placedDevices.push(dragCollider);
-        updateDeviceCount();
+        updateWorkspaceState();
     };
+
+    const resetReinspection = () => {
+        inspectedItems.clear();
+        reinspectionHighlight.removeAllMeshes();
+        [
+            wallsInspection,
+            shieldInspection,
+            egressInspection,
+        ].forEach((item) => {
+            item.classList.remove("is-inspected");
+            item.setAttribute("aria-pressed", "false");
+            item.querySelector("small").textContent = "Not inspected";
+        });
+        reinspectionInstruction.textContent =
+            "Use the buttons below to inspect each part of the trench. The selected component will be highlighted in the 3D viewport.";
+        completeReinspectionButton.disabled = true;
+    };
+
+    const addInspectionHighlight = (meshes) => {
+        meshes.forEach((mesh) => {
+            if (mesh.getTotalVertices() > 0) {
+                reinspectionHighlight.addMesh(
+                    mesh,
+                    reinspectionHighlightColor
+                );
+            }
+        });
+    };
+
+    const inspectItem = (item) => {
+        if (plannerMode !== "reinspection" || inspectedItems.has(item)) {
+            return;
+        }
+
+        inspectedItems.add(item);
+        playCorrectAnswerSound();
+        if (item === "walls") {
+            wallsInspection.classList.add("is-inspected");
+            wallsInspection.setAttribute("aria-pressed", "true");
+            wallsInspection.querySelector("small").textContent =
+                "Inspected — no visible post-storm movement";
+            addInspectionHighlight(trenchWallMeshes);
+        } else if (item === "shield") {
+            shieldInspection.classList.add("is-inspected");
+            shieldInspection.setAttribute("aria-pressed", "true");
+            shieldInspection.querySelector("small").textContent =
+                "Inspected — remains correctly positioned";
+            addInspectionHighlight(
+                configuredShield?.getChildMeshes(false) ?? []
+            );
+        } else {
+            egressInspection.classList.add("is-inspected");
+            egressInspection.setAttribute("aria-pressed", "true");
+            egressInspection.querySelector("small").textContent =
+                "Inspected — ladder remains secure and accessible";
+            addInspectionHighlight(
+                placedEgress?.getChildMeshes(false) ?? []
+            );
+        }
+
+        if (inspectedItems.size === 3) {
+            reinspectionInstruction.textContent =
+                "All three conditions have been inspected. Complete the reinspection to resume work.";
+            completeReinspectionButton.disabled = false;
+        }
+    };
+
+    wallsInspection.addEventListener("click", () => inspectItem("walls"));
+    shieldInspection.addEventListener("click", () => inspectItem("shield"));
+    egressInspection.addEventListener("click", () => inspectItem("egress"));
 
     document.querySelectorAll(".device-card").forEach((card) => {
         const getDeviceData = () => ({
@@ -483,6 +597,7 @@ export function setupTrenchPlanner({
             );
         });
         card.addEventListener("click", () => {
+            if (plannerMode !== "planning") return;
             // Shielding is assessed as a drag-and-drop placement task.
             if (card.dataset.device !== "Trench shield") {
                 placeDevice(getDeviceData());
@@ -491,13 +606,13 @@ export function setupTrenchPlanner({
     });
 
     canvas.addEventListener("dragover", (event) => {
-        if (!isOpen) return;
+        if (plannerMode !== "planning") return;
         event.preventDefault();
         event.dataTransfer.dropEffect = "copy";
     });
 
     canvas.addEventListener("drop", (event) => {
-        if (!isOpen) return;
+        if (plannerMode !== "planning") return;
         event.preventDefault();
 
         const rawData = event.dataTransfer.getData("application/json");
@@ -520,8 +635,31 @@ export function setupTrenchPlanner({
         element.className = `step-feedback ${type ? `is-${type}` : ""}`;
     };
 
+    const removePlacedEgress = () => {
+        if (!placedEgress) return;
+
+        const index = placedDevices.indexOf(placedEgress);
+        if (index >= 0) placedDevices.splice(index, 1);
+        placedEgress.dispose();
+        placedEgress = null;
+        updateWorkspaceState();
+    };
+
+    const resetEgressStep = () => {
+        removePlacedEgress();
+        isComplete = false;
+        isEgressLoading = false;
+        isShieldPlacementAccepted = false;
+        egressSection.hidden = true;
+        addEgressButton.disabled = false;
+        addEgressButton.textContent = "Add egress";
+        submitDevices.disabled = false;
+        setFeedback(egressFeedback, "", "");
+    };
+
     const resetDownstreamSteps = () => {
         removeConfiguredShield();
+        resetEgressStep();
         selectedConfiguration = null;
         configurationSection.hidden = true;
         deviceSection.hidden = true;
@@ -604,6 +742,10 @@ export function setupTrenchPlanner({
             `${selectedProtection} is an acceptable protection approach. Configure it next.`,
             "correct"
         );
+        submitProtection.disabled = true;
+        document.querySelectorAll(".protection-option").forEach((option) => {
+            option.disabled = true;
+        });
         configurationSection.hidden = false;
         configurationTitle.textContent =
             selectedProtection === "Sloping"
@@ -679,6 +821,12 @@ export function setupTrenchPlanner({
             `${selectedConfiguration.dataset.configuration} accepted. Complete the placement step.`,
             "correct"
         );
+        submitConfiguration.disabled = true;
+        document.querySelectorAll(".configuration-option").forEach(
+            (option) => {
+                option.disabled = true;
+            }
+        );
         protectionStatus.textContent =
             `${selectedProtection}: ${selectedConfiguration.dataset.configuration}`;
         configureDeviceStep();
@@ -723,21 +871,97 @@ export function setupTrenchPlanner({
         playCorrectAnswerSound();
         setFeedback(
             deviceFeedback,
-            "Placement accepted. The protection plan is complete.",
+            "Shield placement accepted. Add safe egress to complete the plan.",
             "correct"
         );
-        finalPlanSummary.textContent =
-            selectedProtection === "Shielding"
-                ? `${selectedConfiguration.dataset.configuration} is positioned in the trench. Confirm daily conditions before entry.`
-                : `${selectedConfiguration.dataset.configuration} is paired with worker access or egress. Confirm the slope remains stable before entry.`;
-        finalPlanReview.hidden = false;
-        protectionStatus.textContent = "Plan complete";
-        isComplete = true;
+        isShieldPlacementAccepted = true;
+        submitDevices.disabled = true;
+        egressSection.hidden = false;
+        protectionStatus.textContent = "Shield placed — safe egress required";
         if (placedShield?.metadata?.dragBehavior) {
             placedShield.metadata.dragBehavior.enabled = false;
         }
-        setupCompleteDialog.showModal();
-        returnToMainScene.focus();
+    });
+
+    addEgressButton.addEventListener("click", async () => {
+        if (
+            !isShieldPlacementAccepted ||
+            placedEgress ||
+            isEgressLoading
+        ) {
+            return;
+        }
+
+        isEgressLoading = true;
+        addEgressButton.disabled = true;
+        addEgressButton.textContent = "Adding egress…";
+        setFeedback(egressFeedback, "Loading scaffold ladder…", "");
+
+        try {
+            const ladderImport = await ImportMeshAsync(
+                EGRESS_LADDER_URL,
+                scene
+            );
+            const ladderRoot = ladderImport.meshes.find(
+                (mesh) => !mesh.parent
+            );
+            if (!ladderRoot) {
+                throw new Error(
+                    "SCAFFOLD LADDER.glb does not contain a root mesh"
+                );
+            }
+
+            ladderRoot.name = "placedEgressLadder";
+            ladderRoot.metadata = {
+                trenchDevice: true,
+                type: "Egress ladder",
+            };
+            ladderImport.meshes.forEach((mesh) => {
+                if (mesh.getTotalVertices() > 0) {
+                    mesh.checkCollisions = true;
+                    mesh.isPickable = true;
+                    mesh.metadata = {
+                        ...(mesh.metadata ?? {}),
+                        trenchDevice: true,
+                        type: "Egress ladder",
+                    };
+                }
+            });
+
+            placedEgress = ladderRoot;
+            placedDevices.push(ladderRoot);
+            isEgressLoading = false;
+            updateWorkspaceState();
+            playCorrectAnswerSound();
+            setFeedback(
+                egressFeedback,
+                "Safe egress added. The scaffold ladder is positioned for trench access.",
+                "correct"
+            );
+            addEgressButton.textContent = "Egress added";
+            finalPlanSummary.textContent =
+                `${selectedConfiguration.dataset.configuration} is positioned in the trench with a scaffold ladder for safe egress.`;
+            finalPlanReview.hidden = false;
+            protectionStatus.textContent = "Plan complete";
+            isComplete = true;
+            await new Promise((resolve) => {
+                window.setTimeout(resolve, COMPLETION_DIALOG_DELAY_MS);
+            });
+            if (!isComplete || placedEgress !== ladderRoot) return;
+
+            setupCompleteDialog.showModal();
+            returnToMainScene.focus();
+        } catch (error) {
+            console.error("Failed to add scaffold ladder", error);
+            isEgressLoading = false;
+            addEgressButton.disabled = false;
+            addEgressButton.textContent = "Try adding egress again";
+            setFeedback(
+                egressFeedback,
+                "The scaffold ladder could not be loaded. Try again.",
+                "incorrect"
+            );
+        }
     });
 
     const updateMeasurements = () => {
@@ -780,20 +1004,6 @@ export function setupTrenchPlanner({
         submitMeasurements.disabled = true;
     });
 
-    clearButton.addEventListener("click", () => {
-        placedDevices.splice(0).forEach((device) => device.dispose());
-        configuredShield = null;
-        shieldPlacementGuide.hidden = true;
-        shieldTopPlacementGuide.hidden = true;
-        updateDeviceCount();
-        finalPlanReview.hidden = true;
-        setFeedback(deviceFeedback, "", "");
-        if (selectedConfiguration) {
-            protectionStatus.textContent =
-                `${selectedProtection}: ${selectedConfiguration.dataset.configuration}`;
-        }
-    });
-
     const closeReport = () => {
         if (reportDialog.open) reportDialog.close();
         reportButton.focus();
@@ -810,39 +1020,110 @@ export function setupTrenchPlanner({
         closeReport();
     });
 
-    setupCompleteDialog.addEventListener("cancel", (event) => {
-        event.preventDefault();
-    });
-    returnToMainScene.addEventListener("click", () => {
-        setupCompleteDialog.close();
-        isOpen = false;
-        planner.hidden = true;
-        document.body.classList.remove("planner-open");
-        shieldPlacementGuide.hidden = true;
-        shieldTopPlacementGuide.hidden = true;
-        player.setEnabled(true);
-        if (previousCamera) scene.activeCamera = previousCamera;
-        document.querySelector("#mentorMessage p").textContent =
-            "Great job! The workers can now proceed with installing the pipe safely in the trench.";
-        canvas.focus();
-        onReturnToMainScene();
-    });
+    const enterPlannerView = (mode) => {
+        if (isOpen) return false;
 
-    const open = () => {
         previousCamera = scene.activeCamera;
         isOpen = true;
+        plannerMode = mode;
+        const isReinspection = mode === "reinspection";
+        plannerTitle.textContent = isReinspection
+            ? "Post-storm Trench Reinspection"
+            : "Trench Protection Planner";
+        reportButton.hidden = isReinspection;
+        planningSidebar.hidden = isReinspection;
+        reinspectionPanel.hidden = !isReinspection;
+        canvas.classList.toggle(
+            "trench-reinspection-active",
+            isReinspection
+        );
         document.body.classList.add("planner-open");
         planner.hidden = false;
         player.setEnabled(false);
         cameraPosition.computeWorldMatrix(true);
         planningCamera.position.copyFrom(cameraPosition.getAbsolutePosition());
         scene.activeCamera = planningCamera;
-        measureButton.focus();
+        return true;
+    };
+
+    const leavePlannerView = () => {
+        isOpen = false;
+        plannerMode = null;
+        planner.hidden = true;
+        planningSidebar.hidden = false;
+        reinspectionPanel.hidden = true;
+        plannerTitle.textContent = "Trench Protection Planner";
+        reportButton.hidden = false;
+        document.body.classList.remove("planner-open");
+        canvas.classList.remove("trench-reinspection-active");
+        reinspectionHighlight.removeAllMeshes();
+        shieldPlacementGuide.hidden = true;
+        shieldTopPlacementGuide.hidden = true;
+        player.setEnabled(true);
+        if (previousCamera) scene.activeCamera = previousCamera;
+        canvas.focus();
+    };
+
+    setupCompleteDialog.addEventListener("cancel", (event) => {
+        event.preventDefault();
+    });
+    returnToMainScene.addEventListener("click", () => {
+        setupCompleteDialog.close();
+        leavePlannerView();
+        document.querySelector("#mentorMessage p").textContent =
+            "Great job! The workers can now proceed with installing the pipe safely in the trench.";
+        if (!completionNotified) {
+            completionNotified = true;
+            completionListeners.forEach((listener) => listener());
+        }
+    });
+
+    completeReinspectionButton.addEventListener("click", () => {
+        if (
+            completeReinspectionButton.disabled ||
+            isReinspectionComplete
+        ) {
+            return;
+        }
+
+        isReinspectionComplete = true;
+        leavePlannerView();
+        document.querySelector("#mentorMessage p").textContent =
+            "The trench walls, shielding, and safe egress have been reinspected. Work can now resume.";
+        reinspectionCompletionListeners.forEach((listener) => listener());
+    });
+
+    const open = () => {
+        if (enterPlannerView("planning")) measureButton.focus();
+    };
+
+    const openReinspection = () => {
+        if (
+            !isComplete ||
+            isReinspectionComplete ||
+            !configuredShield ||
+            !placedEgress
+        ) {
+            return;
+        }
+
+        resetReinspection();
+        enterPlannerView("reinspection");
     };
 
     return {
         open,
+        openReinspection,
+        onComplete(listener) {
+            completionListeners.add(listener);
+            return () => completionListeners.delete(listener);
+        },
+        onReinspectionComplete(listener) {
+            reinspectionCompletionListeners.add(listener);
+            return () => reinspectionCompletionListeners.delete(listener);
+        },
         isOpen: () => isOpen,
         isComplete: () => isComplete,
+        isReinspectionComplete: () => isReinspectionComplete,
     };
 }

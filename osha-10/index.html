@@ -150,10 +150,6 @@
           </div>
       </section>
 
-      <button id="trenchInteraction" class="interaction-prompt" type="button" hidden>
-          <span>Install trench protection</span>
-      </button>
-
       <button id="trenchSetupObjective" class="trench-setup-objective" type="button" hidden>
           Set up trench
       </button>
@@ -176,26 +172,60 @@
           <button id="fixConeHazard" class="hazard-action" type="button">Fix it</button>
       </dialog>
 
+      <dialog id="stormWaterHazardDialog" class="hazard-dialog" aria-labelledby="stormWaterHazardTitle" aria-describedby="stormWaterHazardDescription">
+          <button id="closeStormWaterHazardDialog" class="hazard-dialog-close" type="button" aria-label="Close storm water notice">×</button>
+          <span class="hazard-dialog-icon" aria-hidden="true">!</span>
+          <span class="eyebrow">HAZARD IDENTIFIED</span>
+          <h2 id="stormWaterHazardTitle">Storm water accumulation</h2>
+          <p id="stormWaterHazardDescription">Correct — storm water must be mitigated before work can safely resume around the excavation.</p>
+          <button id="mitigateStormWater" class="hazard-action" type="button">Mitigate storm water</button>
+      </dialog>
+
       <main id="trenchPlanner" class="trench-planner" aria-label="Trench protection planner" hidden>
           <header class="planner-header">
               <div>
                   <span class="eyebrow">EXCAVATION MODULE</span>
-                  <h1>Trench Protection Planner</h1>
+                  <h1 id="trenchPlannerTitle">Trench Protection Planner</h1>
               </div>
+              <button id="openGeotechnicalReport" class="geotechnical-report-action" type="button">
+                  <span aria-hidden="true">▤</span>
+                  GEOTECHNICAL REPORT
+              </button>
           </header>
 
           <div class="planner-layout">
-              <aside class="planner-sidebar">
+              <aside id="trenchReinspectionPanel" class="trench-reinspection-panel" hidden>
+                  <span class="eyebrow">POST-STORM INSPECTION</span>
+                  <h2>Reinspect the trench</h2>
+                  <p id="trenchReinspectionInstruction" class="reinspection-instruction" aria-live="polite">
+                      Use the buttons below to inspect each part of the trench. The selected component will be highlighted in the 3D viewport.
+                  </p>
+                  <div class="reinspection-checklist" aria-label="Trench reinspection checklist">
+                      <button id="trenchWallsInspection" class="reinspection-check" type="button" aria-pressed="false">
+                          <span aria-hidden="true">1</span>
+                          <span class="reinspection-check-copy"><strong>Inspect trench walls</strong><small>Not inspected</small></span>
+                      </button>
+                      <button id="trenchShieldInspection" class="reinspection-check" type="button" aria-pressed="false">
+                          <span aria-hidden="true">2</span>
+                          <span class="reinspection-check-copy"><strong>Inspect shielding</strong><small>Not inspected</small></span>
+                      </button>
+                      <button id="trenchEgressInspection" class="reinspection-check" type="button" aria-pressed="false">
+                          <span aria-hidden="true">3</span>
+                          <span class="reinspection-check-copy"><strong>Inspect safe egress</strong><small>Not inspected</small></span>
+                      </button>
+                  </div>
+                  <button id="completeTrenchReinspection" class="step-submit" type="button" disabled>
+                      Complete reinspection
+                  </button>
+              </aside>
+
+              <aside id="trenchPlanningSidebar" class="planner-sidebar">
                   <section class="planner-section">
                       <span class="section-number">01</span>
                       <h2>Measure the trench</h2>
                       <button id="measureTrench" class="measure-trench-action" type="button">
                           <span class="measure-tape-icon" aria-hidden="true">📏</span>
                           Measure trench
-                      </button>
-                      <button id="openGeotechnicalReport" class="geotechnical-report-action" type="button">
-                          <span aria-hidden="true">▤</span>
-                          Geotechnical report
                       </button>
                       <div id="trenchMeasurements" class="measurement-grid" hidden>
                           <label>Length <span><input id="trenchLength" type="number" value="35" readonly aria-readonly="true"> ft</span></label>
@@ -258,6 +288,14 @@
                       <p id="deviceFeedback" class="step-feedback" aria-live="polite"></p>
                   </section>
 
+                  <section id="egressSection" class="planner-section egress-section" hidden>
+                      <span class="section-number">05</span>
+                      <h2>Add safe egress</h2>
+                      <p class="section-help">Install the scaffold ladder so workers have a safe way to enter and leave the protected trench.</p>
+                      <button id="addEgress" class="step-submit" type="button">Add egress</button>
+                      <p id="egressFeedback" class="step-feedback" aria-live="polite"></p>
+                  </section>
+
                   <section id="finalPlanReview" class="planner-section final-plan-review" hidden>
                       <span class="section-number">✓</span>
                       <h2>Plan review</h2>
@@ -269,7 +307,6 @@
               <section class="planner-workspace">
                   <div class="workspace-toolbar">
                       <div><span>TRENCH VIEW</span><strong id="dimensionReadout">Not measured</strong></div>
-                      <div class="workspace-actions"><span id="deviceCount">0 devices placed</span><button id="clearDevices" type="button">Clear</button></div>
                   </div>
                   <div class="trench-stage">
                       <div id="trenchMeasurementGuides" class="trench-measurement-guides" aria-hidden="true" hidden>
@@ -277,12 +314,14 @@
                               <span class="measurement-cap"></span>
                               <span class="measurement-line"></span>
                               <strong>Width <span id="guideWidthValue">—</span></strong>
+                              <span class="measurement-line"></span>
                               <span class="measurement-cap"></span>
                           </div>
                           <div class="measurement-guide measurement-guide-depth">
                               <span class="measurement-cap"></span>
                               <span class="measurement-line"></span>
                               <strong>Depth <span id="guideDepthValue">—</span></strong>
+                              <span class="measurement-line"></span>
                               <span class="measurement-cap"></span>
                           </div>
                       </div>
@@ -309,8 +348,16 @@
           <span class="hazard-dialog-icon" aria-hidden="true">✓</span>
           <span class="eyebrow">SETUP COMPLETE</span>
           <h2 id="setupCompleteTitle">Excellent work!</h2>
-          <p id="setupCompleteDescription">You correctly selected and positioned the trench shielding. This excavation setup is complete.</p>
+          <p id="setupCompleteDescription">You correctly positioned the trench shielding and added safe egress. This excavation setup is complete.</p>
           <button id="returnToMainScene" class="hazard-action" type="button">Return to main scene</button>
+      </dialog>
+
+      <dialog id="moduleCompleteDialog" class="hazard-dialog setup-complete-dialog module-complete-dialog" aria-labelledby="moduleCompleteTitle" aria-describedby="moduleCompleteDescription">
+          <span class="hazard-dialog-icon" aria-hidden="true">✓</span>
+          <span class="eyebrow">MODULE COMPLETE</span>
+          <h2 id="moduleCompleteTitle">Congratulations!</h2>
+          <p id="moduleCompleteDescription">You completed the excavation safety module and successfully reinspected the trench after the storm.</p>
+          <button id="exitModule" class="hazard-action" type="button">Exit</button>
       </dialog>
 
       <dialog id="geotechnicalReport" class="geotechnical-report" aria-labelledby="geotechnicalReportTitle">

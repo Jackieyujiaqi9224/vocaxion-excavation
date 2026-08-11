@@ -1,13 +1,16 @@
 import { MeshBuilder, Ray, Vector3 } from "@babylonjs/core";
+import { ImportMeshAsync } from "@babylonjs/core/Loading/sceneLoader";
 
 const PLAYER_SPAWN = new Vector3(-3, 0, 100);
-const PLAYER_MODEL_NAME = "COL_Player";
+const PLAYER_MODEL_URL = `${import.meta.env.BASE_URL}models/PlayerCharacter.glb`;
 
-export function createPlayer(scene) {
-    const playerModel = scene.getNodeByName(PLAYER_MODEL_NAME);
+export async function createPlayer(scene) {
+    const playerImport = await ImportMeshAsync(PLAYER_MODEL_URL, scene);
+    const playerModel = playerImport.meshes.find((mesh) => !mesh.parent);
     if (!playerModel) {
-        throw new Error(`Excavation scene is missing ${PLAYER_MODEL_NAME}`);
+        throw new Error("PlayerCharacter.glb does not contain a root mesh");
     }
+    playerModel.name = "playerCharacterModel";
 
     // Keep a non-rendering mesh as the collision/movement controller because
     // TransformNode hierarchies imported from glTF cannot moveWithCollisions.
@@ -23,8 +26,7 @@ export function createPlayer(scene) {
             new Vector3(0, -1, 0),
             100
         ),
-        (mesh) =>
-            mesh.checkCollisions && !mesh.isDescendantOf(playerModel)
+        (mesh) => mesh.checkCollisions && !mesh.isDescendantOf(playerModel)
     );
     const floorHeight = groundPick?.hit ? groundPick.pickedPoint.y : 0;
     player.position.copyFrom(PLAYER_SPAWN);
@@ -37,6 +39,7 @@ export function createPlayer(scene) {
 
     playerModel.getChildMeshes(false).forEach((mesh) => {
         mesh.checkCollisions = false;
+        mesh.isPickable = false;
     });
     playerModel.parent = player;
     playerModel.position.setAll(0);
@@ -44,6 +47,30 @@ export function createPlayer(scene) {
     playerModel.computeWorldMatrix(true);
     const modelBounds = playerModel.getHierarchyBoundingVectors(true);
     playerModel.position.y -= modelBounds.min.y - floorHeight;
+
+    const idleAnimation = playerImport.animationGroups.find(
+        (animation) => animation.name === "Player_Static_Pose"
+    );
+    const walkAnimation = playerImport.animationGroups.find(
+        (animation) => animation.name === "Player_Walk"
+    );
+    if (!idleAnimation || !walkAnimation) {
+        throw new Error(
+            "PlayerCharacter.glb must contain Player_Static_Pose and Player_Walk animations"
+        );
+    }
+
+    [idleAnimation, walkAnimation].forEach((animationGroup) => {
+        animationGroup.targetedAnimations.forEach(({ animation }) => {
+            animation.enableBlending = true;
+            animation.blendingSpeed = 0.08;
+        });
+    });
+    player.metadata.animations = {
+        idle: idleAnimation,
+        walk: walkAnimation,
+    };
+    idleAnimation.start(true);
 
     return player;
 }

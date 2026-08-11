@@ -56,6 +56,7 @@ export function setupUtilityMarking({ canvas }) {
     let flagsPlaced = false;
     let selectedZone = null;
     const completedZones = new Set();
+    const completionListeners = new Set();
 
     background.src = excavationBirdViewUrl;
     document.body.classList.add("utility-marking-open");
@@ -172,6 +173,7 @@ export function setupUtilityMarking({ canvas }) {
             () => {
                 screen.hidden = true;
                 canvas.focus();
+                completionListeners.forEach((listener) => listener());
             },
             { once: true }
         );
@@ -237,6 +239,15 @@ export function setupUtilityMarking({ canvas }) {
     });
 
     return {
+        activate() {
+            isActive = true;
+            screen.hidden = false;
+            document.body.classList.add("utility-marking-open");
+        },
+        onComplete(listener) {
+            completionListeners.add(listener);
+            return () => completionListeners.delete(listener);
+        },
         isActive: () => isActive,
     };
 }

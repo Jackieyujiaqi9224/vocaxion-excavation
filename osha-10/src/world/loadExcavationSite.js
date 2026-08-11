@@ -3,7 +3,9 @@ import { ImportMeshAsync } from "@babylonjs/core/Loading/sceneLoader";
 
 const publicAssetUrl = (path) => `${import.meta.env.BASE_URL}${path}`;
 const excavationSceneUrl = publicAssetUrl("models/ExcavationScene.glb");
+const COLLIDER_PREFIX = "COL_";
 const TRENCH_COLLIDER_NAME = "COL_Trench_Barrier_WORKSITE";
+const ZONE_COLLIDER_NAME = "COL_Zone_Collider";
 const TRENCH_WORKSITE_NAME = "Excavation_Trench";
 export const BIG_SHIELD_NAME = "Big_Shield";
 export const BIG_SHIELD_POSITION_1_NAME = "Big_Shield_Pos_01";
@@ -28,16 +30,32 @@ function setShieldEnabled(shield, enabled) {
     });
 }
 
+function configureInvisibleCollider(scene, name) {
+    const collider = scene.getMeshByName(name);
+    if (!collider) {
+        throw new Error(`Excavation scene is missing ${name}`);
+    }
+
+    collider.setEnabled(true);
+    collider.isVisible = true;
+    collider.visibility = 0;
+    collider.isPickable = false;
+    collider.checkCollisions = true;
+    return collider;
+}
+
 export async function loadExcavationSite(scene) {
     const result = await ImportMeshAsync(excavationSceneUrl, scene);
 
     result.meshes.forEach((mesh) => {
-        if (mesh.getTotalVertices() > 0) mesh.checkCollisions = true;
+        if (mesh.getTotalVertices() > 0) {
+            mesh.checkCollisions = mesh.name.startsWith(COLLIDER_PREFIX);
+        }
     });
 
     const shieldTemplates = new Map();
     SHIELD_NAMES.forEach((name) => {
-        const shield = scene.getTransformNodeByName(name);
+        const shield = scene.getNodeByName(name);
         if (!shield) {
             throw new Error(`Excavation scene is missing shield ${name}`);
         }
@@ -73,20 +91,27 @@ export async function loadExcavationSite(scene) {
         },
     };
 
-    const oldTrenchCollider = scene.getMeshByName(TRENCH_COLLIDER_NAME);
-    if (!oldTrenchCollider) {
-        throw new Error(`Excavation scene is missing ${TRENCH_COLLIDER_NAME}`);
-    }
+    // Keep the authored trench and zone barriers invisible while they
+    // constrain the player's collision controller.
+    configureInvisibleCollider(
+        scene,
+        TRENCH_COLLIDER_NAME
+    );
+    configureInvisibleCollider(scene, ZONE_COLLIDER_NAME);
 
     const trenchNode = scene.getTransformNodeByName(TRENCH_WORKSITE_NAME);
     if (!trenchNode) {
         throw new Error(`Excavation scene is missing ${TRENCH_WORKSITE_NAME}`);
     }
 
-    // Trench_WorkSite is the authored hierarchy for the actual excavation.
-    // Remove the old placeholder barrier and derive gameplay bounds from its children.
-    oldTrenchCollider.dispose();
+    // Excavation_Trench is the authored hierarchy for the actual excavation.
+    // Its detailed render meshes must not overlap the authored collision proxies.
     const trenchMeshes = trenchNode.getChildMeshes(false);
+    trenchMeshes.forEach((mesh) => {
+        mesh.checkCollisions = false;
+    });
+
+    // Derive gameplay bounds from the render hierarchy.
     const bounds = trenchNode.getHierarchyBoundingVectors(true);
     const size = bounds.max.subtract(bounds.min);
     const center = bounds.min.add(size.scale(0.5));
