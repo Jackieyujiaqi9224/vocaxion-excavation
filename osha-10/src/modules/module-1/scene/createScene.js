@@ -1,10 +1,8 @@
-import {
-    Color4,
-    DirectionalLight,
-    HemisphericLight,
-    Scene,
-    Vector3,
-} from "@babylonjs/core";
+import { Scene } from "@babylonjs/core/scene.js";
+import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight.js";
+import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight.js";
+import { Color4 } from "@babylonjs/core/Maths/math.color.js";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 import { PhotoDome } from "@babylonjs/core/Helpers/photoDome.js";
 
 import { createNavigationArrow } from "../../../shared/gameplay/createNavigationArrow.js";
@@ -28,7 +26,7 @@ import {
 } from "../gameplay/hazardDefinitions.js";
 import { loadScenarioOne } from "../world/loadScenarioOne.js";
 
-const skyboxUrl = `${import.meta.env.BASE_URL}2D%20Assets/Skybox.png`;
+const skyboxUrl = `${import.meta.env.BASE_URL}2D%20Assets/Skybox.jpg`;
 const PLAYER_SPAWN = new Vector3(0, 0, 10);
 
 function configureEnvironment(scene) {
@@ -61,7 +59,12 @@ function configureEnvironment(scene) {
     sun.intensity = 0.8;
 }
 
-export async function createScene({ engine, canvas, scoring }) {
+export async function createScene({
+    engine,
+    canvas,
+    scoring,
+    registerStartHandler,
+}) {
     const scene = new Scene(engine);
     configureEnvironment(scene);
     const scenario = await loadScenarioOne(scene);
@@ -140,6 +143,6 @@ export async function createScene({ engine, canvas, scoring }) {
         isPaused: gameFlow.isMovementPaused,
     });
 
-    gameFlow.start();
+    registerStartHandler(gameFlow.start);
     return scene;
 }

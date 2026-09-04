@@ -1,11 +1,9 @@
-import {
-    Color4,
-    DirectionalLight,
-    HemisphericLight,
-    Scene,
-    Vector3,
-} from "@babylonjs/core";
+import { Scene } from "@babylonjs/core/scene.js";
 import { PhotoDome } from "@babylonjs/core/Helpers/photoDome.js";
+import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight.js";
+import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight.js";
+import { Color4 } from "@babylonjs/core/Maths/math.color.js";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 
 import { createNavigationArrow } from "../../../shared/gameplay/createNavigationArrow.js";
 import {
@@ -34,7 +32,7 @@ import { stormComicConfig } from "../config/stormComicConfig.js";
 import { trenchPlacementConfig } from "../config/trenchPlacementConfig.js";
 import { loadExcavationSite } from "../world/loadExcavationSite.js";
 
-const skyboxUrl = `${import.meta.env.BASE_URL}2D%20Assets/Skybox.png`;
+const skyboxUrl = `${import.meta.env.BASE_URL}2D%20Assets/Skybox.jpg`;
 
 function createPanoramicSky(scene) {
     const sky = new PhotoDome(
@@ -78,13 +76,16 @@ function setupInspectorShortcut(scene) {
     window.addEventListener("keydown", async (event) => {
         if (event.code !== "KeyI" || event.repeat) return;
 
+        // Loading the inspector also registers scene.debugLayer. With focused
+        // Babylon imports it does not exist until this development-only import.
+        inspectorPromise ??= import("@babylonjs/inspector");
+        await inspectorPromise;
+
         if (scene.debugLayer.isVisible()) {
             scene.debugLayer.hide();
         } else {
             // The inspector is several megabytes and is only needed on demand.
             // Keep it out of the initial gameplay bundle.
-            inspectorPromise ??= import("@babylonjs/inspector");
-            await inspectorPromise;
             await scene.debugLayer.show();
         }
     });
@@ -94,6 +95,7 @@ export async function createScene({
     engine,
     canvas,
     scoring,
+    registerStartHandler,
     onModuleComplete,
 }) {
     const scene = new Scene(engine);
@@ -228,10 +230,12 @@ export async function createScene({
         input,
         isPaused: gameFlow.isMovementPaused,
     });
-    setupInspectorShortcut(scene);
+    if (import.meta.env.DEV) {
+        setupInspectorShortcut(scene);
+    }
     scene.activeCamera = camera;
     engine.resize();
-    gameFlow.start();
+    registerStartHandler(gameFlow.start);
 
     return scene;
 }

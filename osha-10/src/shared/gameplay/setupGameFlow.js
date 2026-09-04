@@ -230,9 +230,10 @@ export function setupGameFlow({
         },
         getStepId: () => currentStep?.id ?? null,
         getStep: () => currentStep,
+        isStarted: () => hasStarted,
         isStep: (stepId) => currentStep?.id === stepId,
         isMovementPaused: () => {
-            if (!currentStep) return false;
+            if (!hasStarted || !currentStep) return true;
             const mechanic = mechanics[currentStep.mechanicId];
             return Boolean(
                 currentStep.pauseMovement ||

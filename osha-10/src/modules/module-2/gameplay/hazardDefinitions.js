@@ -29,7 +29,7 @@ export const spoilPileHazardDefinition = Object.freeze({
         actionButtonId: "moveHazard",
         title: "Unsafe spoil pile placement",
         description:
-            "This pile is too close to the trench. Spoil piles must be kept at least 2 ft from the edge to prevent material from falling back into the excavation and to reduce surcharge load at the trench wallcavated material can fall back into the excavation and put workers at risk.",
+            "This pile is too close to the trench. Spoil piles must be kept at least 2 ft from the edge to prevent material from falling back into the excavation and to reduce surcharge load at the trench wall.",
         actionLabel: "Move it further",
     }),
 });

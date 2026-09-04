@@ -1,6 +1,6 @@
-import "@babylonjs/loaders/glTF";
-import { Vector3 } from "@babylonjs/core";
 import { ImportMeshAsync } from "@babylonjs/core/Loading/sceneLoader";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
+import "../../../shared/assets/registerGltfLoader.js";
 
 const scenarioUrl = `${import.meta.env.BASE_URL}models/Scenario1.glb`;
 const COLLIDER_PREFIX = "COL_";
@@ -87,8 +87,8 @@ export async function loadScenarioOne(scene) {
         center: minimum.add(maximum).scale(0.5),
         minimum,
         maximum,
-        width: 5,
-        depth: SMALL_TRENCH_LENGTH,
+        width: maximum.x - minimum.x,
+        depth: maximum.z - minimum.z,
     });
 
     return Object.freeze({

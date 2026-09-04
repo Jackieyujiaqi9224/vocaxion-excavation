@@ -4,6 +4,8 @@ import {
 } from "../audio/gameFeedbackSounds.js";
 import { createUtilityMarkingUi } from "./utility-marking/createUtilityMarkingUi.js";
 
+const SCREEN_FADE_FALLBACK_MS = 400;
+
 function requireElement(id) {
     const element = document.getElementById(id);
     if (!element) throw new Error(`Missing 811 mechanic element #${id}`);
@@ -11,18 +13,44 @@ function requireElement(id) {
 }
 
 function validateConfig(config) {
+    if (!config?.id) throw new Error("811 config needs an id");
+    if (!config.utilityQuestion?.answers?.length) {
+        throw new Error(`811 config ${config.id} needs utility answers`);
+    }
     const answerIds = new Set(
         config.utilityQuestion.answers.map((answer) => answer.id)
     );
+    if (answerIds.size !== config.utilityQuestion.answers.length) {
+        throw new Error(`811 config ${config.id} repeats a utility answer ID`);
+    }
     if (!answerIds.has(config.utilityQuestion.correctAnswerId)) {
         throw new Error(
             `811 config ${config.id} has an unknown correct utility answer`
         );
     }
 
-    const methodIds = new Set(
-        config.excavationStage.methods.map((method) => method.id)
-    );
+    if (!config.excavationStage?.methods?.length) {
+        throw new Error(`811 config ${config.id} needs excavation methods`);
+    }
+    if (!config.excavationStage.zones?.length) {
+        throw new Error(`811 config ${config.id} needs excavation zones`);
+    }
+    if (!config.markingInspection?.positions?.length) {
+        throw new Error(`811 config ${config.id} needs utility marker positions`);
+    }
+    config.markingInspection.positions.forEach((position, index) => {
+        if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
+            throw new Error(
+                `811 config ${config.id} marker ${index + 1} needs numeric coordinates`
+            );
+        }
+    });
+    const methodIds = new Set(config.excavationStage.methods.map(
+        (method) => method.id
+    ));
+    if (methodIds.size !== config.excavationStage.methods.length) {
+        throw new Error(`811 config ${config.id} repeats an excavation method ID`);
+    }
     const zoneIds = new Set();
     config.excavationStage.zones.forEach((zone) => {
         if (zoneIds.has(zone.id)) {
@@ -32,6 +60,28 @@ function validateConfig(config) {
         if (!methodIds.has(zone.correctMethodId)) {
             throw new Error(
                 `811 zone ${zone.id} uses unknown method ${zone.correctMethodId}`
+            );
+        }
+        if (
+            ![zone.x, zone.y, zone.width, zone.height].every(Number.isFinite) ||
+            zone.width <= 0 ||
+            zone.height <= 0
+        ) {
+            throw new Error(
+                `811 zone ${zone.id} needs numeric coordinates and positive dimensions`
+            );
+        }
+    });
+
+    const requiredTimings = [
+        "advanceAfterCorrectMs",
+        "closeQuizMs",
+        "completeMs",
+    ];
+    requiredTimings.forEach((key) => {
+        if (!Number.isFinite(config.timing?.[key]) || config.timing[key] < 0) {
+            throw new Error(
+                `811 config ${config.id} needs a non-negative timing.${key}`
             );
         }
     });
@@ -195,6 +245,9 @@ export function setupUtilityMarking({ canvas, config, scoring }) {
     const openDigQuiz = (zone) => {
         if (completedZones.has(zone.id)) return;
         selectedZone = zone;
+        digAnswers.forEach((button) => {
+            button.disabled = false;
+        });
         digQuizArea.textContent = zone.label;
         digFeedback.textContent = "";
         digFeedback.className = "utility-quiz-feedback";
@@ -228,18 +281,31 @@ export function setupUtilityMarking({ canvas, config, scoring }) {
     };
 
     const completeUtilityMarking = () => {
+        if (!isActive) return;
         isActive = false;
         digQuiz.close();
         screen.classList.add("is-complete");
         document.body.classList.remove("utility-marking-open");
-        screen.addEventListener(
-            "transitionend",
-            () => {
-                screen.hidden = true;
-                canvas.focus();
-                completionListeners.forEach((listener) => listener());
-            },
-            { once: true }
+        let hasFinished = false;
+        let fallbackTimer = null;
+        const finish = () => {
+            if (hasFinished) return;
+            hasFinished = true;
+            window.clearTimeout(fallbackTimer);
+            screen.removeEventListener("transitionend", onTransitionEnd);
+            screen.hidden = true;
+            canvas.focus();
+            completionListeners.forEach((listener) => listener());
+        };
+        const onTransitionEnd = (event) => {
+            if (event.target === screen && event.propertyName === "opacity") {
+                finish();
+            }
+        };
+        screen.addEventListener("transitionend", onTransitionEnd);
+        fallbackTimer = window.setTimeout(
+            finish,
+            SCREEN_FADE_FALLBACK_MS
         );
     };
 
@@ -280,6 +346,7 @@ export function setupUtilityMarking({ canvas, config, scoring }) {
 
     digAnswers.forEach((button) => {
         button.addEventListener("click", () => {
+            if (!selectedZone || completedZones.has(selectedZone.id)) return;
             if (button.dataset.method !== selectedZone?.correctMethodId) {
                 playWrongAnswerSound();
                 scoring.recordIncorrect({
@@ -292,6 +359,9 @@ export function setupUtilityMarking({ canvas, config, scoring }) {
             }
 
             playCorrectAnswerSound();
+            digAnswers.forEach((answer) => {
+                answer.disabled = true;
+            });
             scoring.recordCorrect({
                 mechanic: "utility-marking",
                 itemId: selectedZone.id,
@@ -314,16 +384,21 @@ export function setupUtilityMarking({ canvas, config, scoring }) {
                     timings.completeMs
                 );
             } else {
-                window.setTimeout(() => digQuiz.close(), timings.closeQuizMs);
+                window.setTimeout(() => {
+                    digQuiz.close();
+                    selectedZone = null;
+                }, timings.closeQuizMs);
             }
         });
     });
 
     return {
         activate() {
+            if (isActive) return;
             isActive = true;
             screen.hidden = false;
             document.body.classList.add("utility-marking-open");
+            callButton.focus();
         },
         onComplete(listener) {
             completionListeners.add(listener);

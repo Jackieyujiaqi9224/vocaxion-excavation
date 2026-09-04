@@ -1,5 +1,5 @@
-import "@babylonjs/loaders/glTF";
 import { ImportMeshAsync } from "@babylonjs/core/Loading/sceneLoader";
+import "../../../shared/assets/registerGltfLoader.js";
 
 const publicAssetUrl = (path) => `${import.meta.env.BASE_URL}${path}`;
 const excavationSceneUrl = publicAssetUrl("models/ExcavationScene.glb");

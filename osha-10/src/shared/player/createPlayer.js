@@ -1,5 +1,8 @@
-import { MeshBuilder, Ray, Vector3 } from "@babylonjs/core";
+import { Ray } from "@babylonjs/core/Culling/ray.js";
 import { ImportMeshAsync } from "@babylonjs/core/Loading/sceneLoader";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
+import { CreateCapsule } from "@babylonjs/core/Meshes/Builders/capsuleBuilder.js";
+import "../assets/registerGltfLoader.js";
 
 const PLAYER_SPAWN = new Vector3(-3, 0, 100);
 const PLAYER_MODEL_URL = `${import.meta.env.BASE_URL}models/PlayerCharacter.glb`;
@@ -17,7 +20,7 @@ export async function createPlayer(
 
     // Keep a non-rendering mesh as the collision/movement controller because
     // TransformNode hierarchies imported from glTF cannot moveWithCollisions.
-    const player = MeshBuilder.CreateCapsule(
+    const player = CreateCapsule(
         "playerCollisionController",
         { height: 1.8, radius: 0.35 },
         scene

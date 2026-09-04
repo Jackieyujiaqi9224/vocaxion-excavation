@@ -13,7 +13,7 @@ export function createUtilityMarkingUi({
             <div id="utilityCallCard" class="utility-call-card">
                 <span class="utility-call-badge" aria-hidden="true"></span><span class="eyebrow"></span>
                 <h1 id="utilityMarkingTitle"></h1><p></p>
-                <button id="call811" class="utility-call-action" type="button"></button>
+                <button id="call811" class="utility-call-action" type="button" data-game-start-focus></button>
             </div>
             <div id="utilityInspectionPanel" class="utility-inspection-panel" hidden>
                 <span class="eyebrow"></span><strong id="utilityInspectionTitle"></strong><span id="utilityInspectionHelp"></span>

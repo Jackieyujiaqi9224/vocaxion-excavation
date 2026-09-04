@@ -1,10 +1,8 @@
-import {
-    Color4,
-    FreeCamera,
-    HemisphericLight,
-    Scene,
-    Vector3,
-} from "@babylonjs/core";
+import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera.js";
+import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight.js";
+import { Color4 } from "@babylonjs/core/Maths/math.color.js";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
+import { Scene } from "@babylonjs/core/scene.js";
 
 export function createPlaceholderScene({ engine, metadata }) {
     const scene = new Scene(engine);

@@ -11,12 +11,18 @@ function requireElement(id) {
 }
 
 function validateConfig(config) {
+    if (!config?.id) {
+        throw new Error("Comic config needs an id");
+    }
     if (!config.pages?.length) {
         throw new Error(`Comic config ${config.id} must contain pages`);
     }
 
     const pageById = new Map();
     config.pages.forEach((page) => {
+        if (!page.id) {
+            throw new Error(`Comic config ${config.id} has a page without an id`);
+        }
         if (pageById.has(page.id)) {
             throw new Error(`Comic config ${config.id} repeats page ${page.id}`);
         }
@@ -53,6 +59,9 @@ function validateConfig(config) {
         }
         const choiceIds = new Set();
         page.choices.forEach((choice) => {
+            if (!choice.id) {
+                throw new Error(`Comic page ${page.id} has a choice without an id`);
+            }
             if (choiceIds.has(choice.id)) {
                 throw new Error(
                     `Comic page ${page.id} repeats choice ${choice.id}`
@@ -65,7 +74,28 @@ function validateConfig(config) {
                     `Comic choice ${page.id}.${choice.id} has no outcome`
                 );
             }
+            if (
+                choice.delayMs !== undefined &&
+                (!Number.isFinite(choice.delayMs) || choice.delayMs < 0)
+            ) {
+                throw new Error(
+                    `Comic choice ${page.id}.${choice.id} needs a non-negative delayMs`
+                );
+            }
+            if (choice.retry && choice.correct === true) {
+                throw new Error(
+                    `Comic choice ${page.id}.${choice.id} cannot be both correct and retryable`
+                );
+            }
         });
+    });
+
+    ["defaultChoiceAdvanceMs", "fadeDurationMs"].forEach((key) => {
+        if (!Number.isFinite(config.timing?.[key]) || config.timing[key] < 0) {
+            throw new Error(
+                `Comic config ${config.id} needs a non-negative timing.${key}`
+            );
+        }
     });
 
     const visited = new Set();
@@ -121,6 +151,7 @@ export function setupComicChoiceScene({ canvas, config, scoring }) {
     let fadeFallbackTimer = null;
     let completionNotified = false;
     let beforeCloseNotified = false;
+    const scoredCorrectChoices = new Set();
 
     const applyPresentation = (page) => {
         const sceneBackground = {
@@ -205,11 +236,16 @@ export function setupComicChoiceScene({ canvas, config, scoring }) {
             button.textContent = choice.label;
             button.addEventListener("click", () => {
                 if (actionTimer || isTransitioning) return;
-                if (choice.correct === true) {
+                const choiceKey = `${page.id}.${choice.id}`;
+                if (
+                    choice.correct === true &&
+                    !scoredCorrectChoices.has(choiceKey)
+                ) {
+                    scoredCorrectChoices.add(choiceKey);
                     playCorrectAnswerSound();
                     scoring.recordCorrect({
                         mechanic: "comic-choice",
-                        itemId: `${page.id}.${choice.id}`,
+                        itemId: choiceKey,
                     });
                 }
                 if (choice.correct === false) {
@@ -282,6 +318,7 @@ export function setupComicChoiceScene({ canvas, config, scoring }) {
     const show = () => {
         activationTimer = null;
         history.length = 0;
+        scoredCorrectChoices.clear();
         completionNotified = false;
         beforeCloseNotified = false;
         isTransitioning = false;

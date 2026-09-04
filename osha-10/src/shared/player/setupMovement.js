@@ -1,10 +1,13 @@
-import { Vector3 } from "@babylonjs/core";
+import "@babylonjs/core/Collisions/collisionCoordinator.js";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 
 const MOVE_SPEED = 0.05;
 const TURN_SPEED = 0.02;
 const JUMP_STRENGTH = 0.22;
 const GRAVITY_STEP = 0.02;
 const VERTICAL_COLLISION_EPSILON = 0.001;
+const REFERENCE_FRAME_MS = 1000 / 60;
+const MAX_FRAME_SCALE = 3;
 
 export function setupMovement({
     scene,
@@ -33,8 +36,15 @@ export function setupMovement({
             return;
         }
 
-        if (input.left) player.rotation.y -= TURN_SPEED;
-        if (input.right) player.rotation.y += TURN_SPEED;
+        // Preserve the authored 60 fps tuning while keeping movement stable on
+        // high-refresh displays and during short frame-rate drops.
+        const frameScale = Math.min(
+            Math.max(scene.getEngine().getDeltaTime() / REFERENCE_FRAME_MS, 0),
+            MAX_FRAME_SCALE
+        );
+
+        if (input.left) player.rotation.y -= TURN_SPEED * frameScale;
+        if (input.right) player.rotation.y += TURN_SPEED * frameScale;
 
         const facing = new Vector3(
             Math.sin(player.rotation.y),
@@ -46,7 +56,7 @@ export function setupMovement({
         if (input.forward) movement.addInPlace(facing);
         if (input.back) movement.subtractInPlace(facing);
         if (movement.lengthSquared() > 0.0001) {
-            movement.normalize().scaleInPlace(MOVE_SPEED);
+            movement.normalize().scaleInPlace(MOVE_SPEED * frameScale);
         }
         playAnimation(
             movement.lengthSquared() > 0.0001
@@ -59,7 +69,7 @@ export function setupMovement({
             isGrounded = false;
         }
 
-        verticalVelocity += scene.gravity.y * GRAVITY_STEP;
+        verticalVelocity += scene.gravity.y * GRAVITY_STEP * frameScale;
         if (movement.lengthSquared() > 0.0001) {
             player.moveWithCollisions(movement);
             // The vertical collision pass must start from the horizontally
@@ -68,7 +78,7 @@ export function setupMovement({
         }
 
         const verticalStart = player.position.y;
-        const requestedVerticalMovement = verticalVelocity;
+        const requestedVerticalMovement = verticalVelocity * frameScale;
         player.moveWithCollisions(
             new Vector3(0, requestedVerticalMovement, 0)
         );

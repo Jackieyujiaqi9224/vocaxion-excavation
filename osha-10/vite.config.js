@@ -1,5 +1,10 @@
+import { readFileSync } from "node:fs";
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
+import {
+    publicAssetsByModule,
+    sharedPublicAssets,
+} from "./build/moduleAssets.js";
 
 const DEFAULT_MODULE_ID = "module-2";
 const moduleEntries = Object.freeze({
@@ -11,8 +16,39 @@ const moduleEntries = Object.freeze({
     "module-6": "./src/modules/module-6/module.js",
 });
 
+function emitModulePublicAssets(moduleId) {
+    const assetPaths = new Set([
+        ...sharedPublicAssets,
+        ...publicAssetsByModule[moduleId],
+    ]);
+
+    return {
+        name: "emit-module-public-assets",
+        apply: "build",
+        buildStart() {
+            assetPaths.forEach((assetPath) => {
+                this.emitFile({
+                    type: "asset",
+                    fileName: assetPath,
+                    source: readFileSync(
+                        fileURLToPath(
+                            new URL(`./public/${assetPath}`, import.meta.url)
+                        )
+                    ),
+                });
+            });
+        },
+    };
+}
+
 export default defineConfig(({ mode }) => {
-    const moduleId = moduleEntries[mode] ? mode : DEFAULT_MODULE_ID;
+    const isDefaultViteMode = mode === "development" || mode === "production";
+    if (!isDefaultViteMode && !moduleEntries[mode]) {
+        throw new Error(
+            `Unknown game module mode "${mode}". Expected module-1 through module-6.`
+        );
+    }
+    const moduleId = isDefaultViteMode ? DEFAULT_MODULE_ID : mode;
     const moduleEntry = fileURLToPath(
         new URL(moduleEntries[moduleId], import.meta.url)
     );
@@ -25,6 +61,8 @@ export default defineConfig(({ mode }) => {
         // separate prevents one module from invalidating another module's
         // optimized dependency URLs while a browser tab is still using them.
         cacheDir: `node_modules/.vite/${moduleId}`,
+
+        plugins: [emitModulePublicAssets(moduleId)],
 
         resolve: {
             alias: {
@@ -51,20 +89,12 @@ export default defineConfig(({ mode }) => {
         build: {
             outDir: `dist/${moduleId}`,
             emptyOutDir: true,
-            target: "esnext",
-            minify: "esbuild",
-            sourcemap: true,
-            // Babylon bundles are large; avoid noisy chunk warnings.
-            chunkSizeWarningLimit: 4000,
-            rollupOptions: {
-                output: {
-                    manualChunks(id) {
-                        if (id.includes("node_modules/@babylonjs/")) {
-                            return "babylon";
-                        }
-                    },
-                },
-            },
+            minify: "oxc",
+            sourcemap: false,
+            copyPublicDir: false,
+            // The active 3D modules legitimately include Babylon's runtime.
+            // Keep this low enough to catch meaningful bundle regressions.
+            chunkSizeWarningLimit: 1600,
         },
 
         optimizeDeps: {

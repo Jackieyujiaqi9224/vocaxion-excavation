@@ -1,21 +1,28 @@
-import {
-    Color3,
-    HighlightLayer,
-    Matrix,
-    MeshBuilder,
-    PointerDragBehavior,
-    StandardMaterial,
-    UniversalCamera,
-    Vector3,
-} from "@babylonjs/core";
+import { PointerDragBehavior } from "@babylonjs/core/Behaviors/Meshes/pointerDragBehavior.js";
+import { UniversalCamera } from "@babylonjs/core/Cameras/universalCamera.js";
+import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer.js";
+import "@babylonjs/core/Layers/effectLayerSceneComponent.js";
 import { ImportMeshAsync } from "@babylonjs/core/Loading/sceneLoader";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial.js";
+import { Color3 } from "@babylonjs/core/Maths/math.color.js";
+import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector.js";
+import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder.js";
+import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder.js";
 import {
     playCorrectAnswerSound,
     playWrongAnswerSound,
 } from "../audio/gameFeedbackSounds.js";
+import "../assets/registerGltfLoader.js";
 import { createTrenchSetupUi } from "./trench-setup/createTrenchSetupUi.js";
 
 function validateConfig(config) {
+    if (!config?.id) throw new Error("Trench config needs an id");
+    if (!config.protectionSystems?.length) {
+        throw new Error(`Trench config ${config.id} needs protection systems`);
+    }
+    if (!Array.isArray(config.devices)) {
+        throw new Error(`Trench config ${config.id} needs a devices array`);
+    }
     const protectionIds = new Set();
     const configurationIds = new Set();
     const deviceIds = new Set(config.devices.map((device) => device.id));
@@ -23,6 +30,11 @@ function validateConfig(config) {
         throw new Error(`Trench config ${config.id} repeats a device ID`);
     }
     config.protectionSystems.forEach((protection) => {
+        if (!protection.id || !Array.isArray(protection.configurations)) {
+            throw new Error(
+                `Trench config ${config.id} has an invalid protection system`
+            );
+        }
         if (protectionIds.has(protection.id)) {
             throw new Error(
                 `Trench config ${config.id} repeats protection ${protection.id}`
@@ -76,16 +88,29 @@ function validateConfig(config) {
                 );
             }
         });
+        protection.placement?.requiredDeviceIds?.forEach((deviceId) => {
+            if (!deviceIds.has(deviceId)) {
+                throw new Error(
+                    `Protection ${protection.id} requires unknown device ${deviceId}`
+                );
+            }
+        });
     });
+
+    if (!config.protectionSystems.some(
+        (protection) => protection.available !== false
+    )) {
+        throw new Error(`Trench config ${config.id} has no available protection`);
+    }
 }
 
 function createDeviceMesh(scene, device) {
     const meshName = `placed-${device.id}`;
     if (device.geometry.type === "box") {
-        return MeshBuilder.CreateBox(meshName, device.geometry, scene);
+        return CreateBox(meshName, device.geometry, scene);
     }
     if (device.geometry.type === "cylinder") {
-        return MeshBuilder.CreateCylinder(meshName, device.geometry, scene);
+        return CreateCylinder(meshName, device.geometry, scene);
     }
     throw new Error(
         `Device ${device.id} has unsupported geometry ${device.geometry.type}`
@@ -370,6 +395,9 @@ export function setupTrenchPlanner({
         measurementPoints.depthTop.getAbsolutePosition().y -
         measurementPoints.cross.getAbsolutePosition().y
     );
+    if (!Number.isFinite(trenchVerticalWorldSpan) || trenchVerticalWorldSpan <= 0) {
+        throw new Error("Trench measurement points need a non-zero vertical span");
+    }
     const verticalFeetPerWorldUnit =
         config.trenchDimensions.depth / trenchVerticalWorldSpan;
 
@@ -551,7 +579,7 @@ export function setupTrenchPlanner({
         const bounds = shield.getHierarchyBoundingVectors(true);
         const size = bounds.max.subtract(bounds.min);
         const center = bounds.min.add(size.scale(0.5));
-        const dragCollider = MeshBuilder.CreateBox(
+        const dragCollider = CreateBox(
             "placedTrenchShieldDragCollider",
             {
                 width: size.x,

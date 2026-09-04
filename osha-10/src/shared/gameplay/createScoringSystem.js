@@ -2,6 +2,12 @@ export function createScoringSystem({
     correctPoints = 10,
     incorrectPoints = -5,
 } = {}) {
+    if (!Number.isFinite(correctPoints) || correctPoints <= 0) {
+        throw new Error("correctPoints must be a positive number");
+    }
+    if (!Number.isFinite(incorrectPoints) || incorrectPoints >= 0) {
+        throw new Error("incorrectPoints must be a negative number");
+    }
     let score = 0;
     const listeners = new Set();
 

@@ -1,8 +1,7 @@
-import {
-    MeshBuilder,
-    PBRMaterial,
-    TransformNode,
-} from "@babylonjs/core";
+import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial.js";
+import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder.js";
+import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder.js";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 
 export function createNavigationArrow(scene, player) {
     const root = new TransformNode("hazardNavigationArrow", scene);
@@ -13,7 +12,7 @@ export function createNavigationArrow(scene, player) {
     material.metallic = 0.05;
     material.roughness = 0.85;
 
-    const shaft = MeshBuilder.CreateBox(
+    const shaft = CreateBox(
         "navigationArrowShaft",
         { width: 0.28, height: 0.18, depth: 1.15 },
         scene
@@ -22,7 +21,7 @@ export function createNavigationArrow(scene, player) {
     shaft.material = material;
     shaft.parent = root;
 
-    const head = MeshBuilder.CreateCylinder(
+    const head = CreateCylinder(
         "navigationArrowHead",
         { diameterTop: 0, diameterBottom: 0.72, height: 0.8, tessellation: 32 },
         scene
@@ -32,7 +31,7 @@ export function createNavigationArrow(scene, player) {
     head.material = material;
     head.parent = root;
 
-    const markerShaft = MeshBuilder.CreateBox(
+    const markerShaft = CreateBox(
         "hazardTargetMarkerShaft",
         { width: 0.3, height: 1.1, depth: 0.3 },
         scene
@@ -42,7 +41,7 @@ export function createNavigationArrow(scene, player) {
     markerShaft.parent = targetMarker;
 
     // A cylinder points along Y. With a zero bottom diameter, its tip points down.
-    const markerHead = MeshBuilder.CreateCylinder(
+    const markerHead = CreateCylinder(
         "hazardTargetMarkerHead",
         { diameterTop: 0.9, diameterBottom: 0, height: 0.8, tessellation: 32 },
         scene

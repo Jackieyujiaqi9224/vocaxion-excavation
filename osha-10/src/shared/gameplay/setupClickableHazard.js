@@ -1,8 +1,8 @@
-import {
-    Color3,
-    HighlightLayer,
-    PointerEventTypes,
-} from "@babylonjs/core";
+import "@babylonjs/core/Culling/ray.js";
+import { PointerEventTypes } from "@babylonjs/core/Events/pointerEvents.js";
+import { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer.js";
+import "@babylonjs/core/Layers/effectLayerSceneComponent.js";
+import { Color3 } from "@babylonjs/core/Maths/math.color.js";
 import { playCorrectAnswerSound } from "../audio/gameFeedbackSounds.js";
 import { createHazardIdentificationUi } from "./hazard-identification/createHazardIdentificationUi.js";
 
@@ -138,6 +138,19 @@ export function setupClickableHazard({
     };
 
     scene.onPointerObservable.add((pointerInfo) => {
+        if (
+            pointerInfo.type !== PointerEventTypes.POINTERMOVE &&
+            pointerInfo.type !== PointerEventTypes.POINTERPICK
+        ) {
+            return;
+        }
+        if (!isActive || dialog.open || isUnavailable()) {
+            if (pointerInfo.type === PointerEventTypes.POINTERMOVE) {
+                clearHighlight();
+            }
+            return;
+        }
+
         const hazardPick = scene.pick(
             scene.pointerX,
             scene.pointerY,

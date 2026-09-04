@@ -19,6 +19,11 @@
     "build:module-5": "vite build --mode module-5",
     "build:module-6": "vite build --mode module-6",
     "build:all": "npm run build:module-1 && npm run build:module-2 && npm run build:module-3 && npm run build:module-4 && npm run build:module-5 && npm run build:module-6",
+    "check:syntax": "find src build scripts test -type f \\( -name '*.js' -o -name '*.mjs' \\) -print0 | xargs -0 -n1 node --check && node --check vite.config.js",
+    "validate": "node scripts/validate-project.mjs",
+    "verify:build": "node scripts/verify-build.mjs",
+    "test": "node --test",
+    "check": "npm run check:syntax && npm run validate && npm test && npm run build:all && npm run verify:build",
     "preview": "vite preview --mode module-2",
     "preview:module-1": "vite preview --mode module-1",
     "preview:module-2": "vite preview --mode module-2",
@@ -27,29 +32,27 @@
     "preview:module-5": "vite preview --mode module-5",
     "preview:module-6": "vite preview --mode module-6"
   },
-  "devDependencies": {
-    "vite": "^5.4.19"
-  },
   "dependencies": {
-    "@babylonjs/addons": "8.56.2",
     "@babylonjs/core": "8.56.2",
+    "@babylonjs/loaders": "8.56.2"
+  },
+  "devDependencies": {
+    "@babylonjs/addons": "8.56.2",
     "@babylonjs/gui": "8.56.2",
     "@babylonjs/gui-editor": "8.56.2",
     "@babylonjs/inspector": "8.56.2",
-    "@babylonjs/loaders": "8.56.2",
     "@babylonjs/materials": "8.56.2",
     "@babylonjs/serializers": "8.56.2",
-    "@fluentui-contrib/react-resize-handle": "^0.8.4",
     "@fluentui-contrib/react-virtualizer": "^1.0.0",
     "@fluentui/react-components": "^9.74.5",
     "@fluentui/react-icons": "2.0.316",
     "@fluentui/react-motion-components-preview": "^0.15.6",
-    "@fluentui/react-utilities": "^9.26.5",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "usehooks-ts": "^3.1.1"
+    "usehooks-ts": "^3.1.1",
+    "vite": "8.2.2"
   },
   "engines": {
-    "node": ">=18"
+    "node": "^20.19.0 || >=22.12.0"
   }
 }

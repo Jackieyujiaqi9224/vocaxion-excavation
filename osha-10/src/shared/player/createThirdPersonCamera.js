@@ -1,4 +1,6 @@
-import { FollowCamera, TransformNode, Vector3 } from "@babylonjs/core";
+import { FollowCamera } from "@babylonjs/core/Cameras/followCamera.js";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 
 export function createThirdPersonCamera(scene, targetMesh) {
     // The proxy follows both position and heading, keeping the camera behind the

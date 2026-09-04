@@ -24,12 +24,24 @@ Common commands:
 - `npm run build:module-2` writes `dist/module-2`;
 - `npm run build:all` writes all six independent module folders;
 - `npm run preview:module-1` previews the Module 1 production build.
+- `npm run check` validates source and model assumptions, runs unit tests, and
+  builds every module. Run it before merging or deploying.
+
+Production builds copy only the public files listed in
+`build/moduleAssets.js`. Add a new module's images, audio, and models to its
+manifest when adding references in module configuration. This keeps each
+`dist/module-N` independently deployable without packaging assets belonging to
+the other five modules. The validator fails early if a listed asset is missing,
+empty, malformed, or requires an unregistered glTF extension.
 
 Every `module.js` entry exports `moduleMetadata`, `interfaceConfig`, and
 `createScene(context)`. Module metadata controls the browser title and build
 identity; interface configuration supplies the visible start-screen and HUD
 content. The scene factory receives the shared Babylon engine, canvas, scoring
-system, and module-complete callback.
+system, a start-handler registration function, and module-complete callback.
+Register the module flow with `registerStartHandler(gameFlow.start)` so input,
+movement, scoring, and full-screen mechanics stay inactive until the learner
+presses Start.
 
 ## Shared interface structure
 

@@ -1,4 +1,4 @@
-import { KeyboardEventTypes } from "@babylonjs/core";
+import { KeyboardEventTypes } from "@babylonjs/core/Events/keyboardEvents.js";
 
 export function setupInput(scene) {
     const input = {
@@ -9,8 +9,20 @@ export function setupInput(scene) {
         jump: false,
     };
 
+    const reset = () => {
+        input.forward = false;
+        input.back = false;
+        input.left = false;
+        input.right = false;
+        input.jump = false;
+    };
+    const isEditableTarget = (target) =>
+        target instanceof Element &&
+        Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+
     scene.onKeyboardObservable.add((keyboardInfo) => {
         const isDown = keyboardInfo.type === KeyboardEventTypes.KEYDOWN;
+        if (isDown && isEditableTarget(keyboardInfo.event.target)) return;
 
         switch (keyboardInfo.event.code) {
             case "KeyW":
@@ -33,6 +45,16 @@ export function setupInput(scene) {
                 input.jump = isDown;
                 break;
         }
+    });
+
+    const resetWhenHidden = () => {
+        if (document.hidden) reset();
+    };
+    window.addEventListener("blur", reset);
+    document.addEventListener("visibilitychange", resetWhenHidden);
+    scene.onDisposeObservable.addOnce(() => {
+        window.removeEventListener("blur", reset);
+        document.removeEventListener("visibilitychange", resetWhenHidden);
     });
 
     return input;

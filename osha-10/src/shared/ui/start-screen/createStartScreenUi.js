@@ -3,7 +3,7 @@ import { appendUi, requireUiElement } from "../dom/appendUi.js";
 
 export function createStartScreenUi({ root, config }) {
     appendUi(root, `
-        <section id="startScreen" class="start-screen" aria-labelledby="startScreenTitle">
+        <section id="startScreen" class="start-screen" aria-labelledby="startScreenTitle" aria-busy="true">
             <img class="start-screen-background" alt="" width="1600" height="900" fetchpriority="high">
             <div class="start-screen-content">
                 <h1 id="startScreenTitle"></h1>

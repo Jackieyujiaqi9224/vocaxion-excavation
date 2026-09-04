@@ -1,3 +1,9 @@
+import { setupButtonSounds } from "./setupButtonSounds.js";
+
+const isEditableTarget = (target) =>
+    target instanceof Element &&
+    Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+
 function setupInstructionsUI(config) {
     const panel = document.getElementById("controlsPanel");
     const closeButton = document.getElementById("closeControls");
@@ -14,6 +20,7 @@ function setupInstructionsUI(config) {
     closeButton.addEventListener("click", () => setVisible(false));
     showButton.addEventListener("click", () => setVisible(true));
     window.addEventListener("keydown", (event) => {
+        if (isEditableTarget(event.target)) return;
         if (event.code === "KeyH" && !event.repeat) setVisible(!isVisible);
     });
 }
@@ -39,6 +46,7 @@ function setupMentorUI(config) {
 
     toggleButton.addEventListener("click", () => setExpanded(!isExpanded));
     window.addEventListener("keydown", (event) => {
+        if (isEditableTarget(event.target)) return;
         if (event.code === "KeyM" && !event.repeat) setExpanded(!isExpanded);
     });
 }
@@ -47,6 +55,7 @@ function preventGameKeyScrolling() {
     window.addEventListener(
         "keydown",
         (event) => {
+            if (isEditableTarget(event.target)) return;
             const gameKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"];
             if (gameKeys.includes(event.code)) event.preventDefault();
         },
@@ -60,4 +69,3 @@ export function setupInterface(config) {
     setupMentorUI(config.mentor);
     preventGameKeyScrolling();
 }
-import { setupButtonSounds } from "./setupButtonSounds.js";
