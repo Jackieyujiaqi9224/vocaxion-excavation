@@ -1,0 +1,1048 @@
+.interaction-prompt {
+    position: fixed;
+    z-index: 20;
+    top: 24px;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    border-radius: 12px;
+    color: #f8fafc;
+    background: rgba(13, 18, 22, 0.94);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.42);
+    cursor: pointer;
+    font-weight: 700;
+    transform: translateX(-50%);
+    animation: prompt-in 160ms ease-out;
+}
+
+.interaction-prompt[hidden] {
+    display: none;
+}
+
+.interaction-prompt:hover {
+    border-color: #fbbf24;
+    background: rgba(31, 39, 46, 0.98);
+}
+
+.trench-setup-panel {
+    position: fixed;
+    z-index: 20;
+    top: 24px;
+    left: 50%;
+    display: flex;
+    min-width: min(390px, calc(100vw - 48px));
+    padding: 10px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    border: 1px solid rgba(251, 191, 36, 0.58);
+    border-radius: 12px;
+    color: #f8fafc;
+    background: rgba(13, 18, 22, 0.94);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42);
+    backdrop-filter: blur(12px);
+    transform: translateX(-50%);
+}
+
+.trench-setup-panel[hidden] {
+    display: none;
+}
+
+.trench-setup-panel-copy {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.trench-setup-panel-copy strong {
+    font-size: 0.82rem;
+}
+
+.trench-setup-panel-icon {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    color: #052e24;
+    background: #34d399;
+    font-weight: 900;
+}
+
+.trench-setup-objective {
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 8px;
+    color: #111827;
+    background: #fbbf24;
+    cursor: pointer;
+    font-weight: 850;
+}
+
+.trench-setup-objective:hover {
+    background: #fcd34d;
+}
+
+.trench-planner {
+    position: fixed;
+    z-index: 100;
+    inset: 0;
+    overflow: auto;
+    color: #e8edf2;
+    background: transparent;
+    pointer-events: none;
+}
+
+.trench-planner[hidden] {
+    display: none;
+}
+
+.trench-planner button {
+    text-transform: uppercase;
+}
+
+/* Keep the installation view focused on only the 3D trench and its planner. */
+body.planner-open .controls-panel,
+body.planner-open .show-controls,
+body.planner-open .mentor-panel,
+body.planner-open .interaction-prompt,
+body.planner-open .trench-setup-panel,
+body.planner-open .hazard-hint {
+    display: none;
+}
+
+.planner-exit {
+    padding: 9px 13px;
+    border: 1px solid #46535c;
+    border-radius: 8px;
+    color: #e8edf2;
+    background: #222b31;
+    cursor: pointer;
+}
+
+.planner-exit:hover {
+    border-color: #fbbf24;
+}
+
+.planner-layout {
+    display: grid;
+    min-height: 100vh;
+    grid-template-columns: 360px minmax(500px, 1fr);
+}
+
+.planner-sidebar {
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 22px;
+    border-right: 1px solid #2c363d;
+    background: #171e23;
+    pointer-events: auto;
+}
+
+.planner-sidebar[hidden],
+.trench-reinspection-panel[hidden] {
+    display: none;
+}
+
+.trench-reinspection-panel {
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 28px 24px;
+    border-right: 1px solid #2c363d;
+    background: #171e23;
+    pointer-events: auto;
+}
+
+.trench-reinspection-panel h2 {
+    margin: 7px 0 10px;
+    font-size: 1.15rem;
+}
+
+.reinspection-instruction {
+    margin: 0 0 20px;
+    color: #aab6be;
+    font-size: 0.78rem;
+    line-height: 1.55;
+}
+
+.reinspection-checklist {
+    display: grid;
+    gap: 10px;
+}
+
+.reinspection-check {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 11px;
+    padding: 12px;
+    border: 1px solid #354047;
+    border-radius: 9px;
+    color: inherit;
+    background: #20282e;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color 160ms ease,
+        background 160ms ease,
+        transform 160ms ease;
+}
+
+.reinspection-check:hover {
+    border-color: #fbbf24;
+    background: #273139;
+    transform: translateY(-1px);
+}
+
+.reinspection-check:focus-visible {
+    outline: 2px solid #fbbf24;
+    outline-offset: 2px;
+}
+
+.reinspection-check > span:first-child {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    color: #11171b;
+    background: #fbbf24;
+    font-size: 0.72rem;
+    font-weight: 900;
+}
+
+.reinspection-check-copy {
+    display: grid;
+    gap: 3px;
+}
+
+.reinspection-check strong {
+    font-size: 0.82rem;
+}
+
+.reinspection-check small {
+    color: #8997a1;
+    font-size: 0.68rem;
+}
+
+.reinspection-check.is-inspected {
+    border-color: rgba(52, 211, 153, 0.5);
+    background: rgba(52, 211, 153, 0.08);
+}
+
+.reinspection-check.is-inspected:hover {
+    border-color: #34d399;
+    background: rgba(52, 211, 153, 0.13);
+}
+
+.reinspection-check.is-inspected > span:first-child {
+    color: #052e24;
+    background: #34d399;
+}
+
+.reinspection-check.is-inspected small {
+    color: #6ee7b7;
+}
+
+.planner-section {
+    position: relative;
+    padding: 4px 0 22px 38px;
+    border-bottom: 1px solid #2c363d;
+    margin-bottom: 20px;
+}
+
+.planner-section:last-child {
+    border-bottom: 0;
+}
+
+.planner-section.is-locked {
+    opacity: 0.52;
+}
+
+.section-number {
+    position: absolute;
+    top: 3px;
+    left: 0;
+    display: grid;
+    width: 26px;
+    height: 26px;
+    place-items: center;
+    border-radius: 50%;
+    color: #11171b;
+    background: #fbbf24;
+    font-size: 0.64rem;
+    font-weight: 900;
+}
+
+.planner-section h2 {
+    margin: 0 0 13px;
+    font-size: 0.92rem;
+}
+
+.section-help {
+    margin: -5px 0 12px;
+    color: #8997a1;
+    font-size: 0.72rem;
+    line-height: 1.4;
+}
+
+.measurement-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.measurement-grid[hidden] {
+    display: none;
+}
+
+.measure-trench-action {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 1px solid rgba(251, 191, 36, 0.55);
+    border-radius: 8px;
+    color: #111827;
+    background: #fbbf24;
+    cursor: pointer;
+    font-weight: 850;
+}
+
+.measure-trench-action[hidden] {
+    display: none;
+}
+
+.measure-trench-action:hover:not(:disabled) {
+    background: #fcd34d;
+}
+
+.measure-trench-action:disabled {
+    border-color: #46535c;
+    background: #2b343a;
+    color: #74818a;
+    cursor: not-allowed;
+}
+
+.geotechnical-report-control {
+    display: grid;
+    gap: 8px;
+    margin: 0 0 22px;
+    padding: 0 0 20px;
+    border-bottom: 1px solid #2c363d;
+}
+
+.geotechnical-report-control[hidden] {
+    display: none;
+}
+
+.geotechnical-report-action {
+    display: flex;
+    width: 100%;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 1px solid rgba(251, 191, 36, 0.55);
+    border-radius: 8px;
+    color: #111827;
+    background: #fbbf24;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 850;
+    letter-spacing: 0.035em;
+    white-space: nowrap;
+}
+
+.geotechnical-report-action[hidden] {
+    display: none;
+}
+
+.geotechnical-report-action:hover,
+.geotechnical-report-action:focus-visible,
+.geotechnical-report-action:active {
+    background: #fcd34d;
+}
+
+.geotechnical-report-action.is-reviewed {
+    border-color: #34d399;
+    background: #34d399;
+}
+
+.geotechnical-report-status {
+    display: block;
+    color: #fcd34d;
+    font-size: 0.72rem;
+    font-weight: 750;
+    line-height: 1.35;
+}
+
+.geotechnical-report-action.is-reviewed + .geotechnical-report-status {
+    color: #6ee7b7;
+}
+
+.measure-tape-icon {
+    font-size: 1.2rem;
+}
+
+.measurement-grid label {
+    color: #8f9ca5;
+    font-size: 0.68rem;
+}
+
+.measurement-grid label span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 5px;
+    color: #71808a;
+}
+
+.measurement-grid input {
+    width: 58px;
+    padding: 7px 6px;
+    border: 1px solid #3a464e;
+    border-radius: 6px;
+    color: #fff;
+    background: #0f1417;
+}
+
+.measurement-grid input[readonly] {
+    color: #f8fafc;
+    cursor: default;
+    pointer-events: none;
+}
+
+.measurement-grid input[readonly]::-webkit-inner-spin-button,
+.measurement-grid input[readonly]::-webkit-outer-spin-button {
+    margin: 0;
+    appearance: none;
+}
+
+.protection-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+.protection-option {
+    padding: 9px;
+    border: 1px solid #364149;
+    border-radius: 7px;
+    color: #aeb9c1;
+    background: #20282e;
+    cursor: pointer;
+}
+
+.protection-option.is-selected {
+    border-color: #fbbf24;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.08);
+}
+
+.protection-option:disabled,
+.configuration-option:disabled {
+    cursor: default;
+}
+
+.protection-configuration[hidden],
+.device-section[hidden],
+.egress-section[hidden],
+.configuration-options[hidden] {
+    display: none;
+}
+
+.configuration-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+}
+
+.configuration-option {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+    padding: 10px 5px;
+    border: 1px solid #364149;
+    border-radius: 7px;
+    color: #aeb9c1;
+    background: #20282e;
+    cursor: pointer;
+    text-align: center;
+}
+
+.configuration-option strong {
+    color: #edf2f5;
+    font-size: 0.78rem;
+}
+
+.configuration-option span {
+    overflow: hidden;
+    color: #84929c;
+    font-size: 0.6rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.configuration-option:hover,
+.configuration-option.is-selected {
+    border-color: #fbbf24;
+    background: rgba(251, 191, 36, 0.08);
+}
+
+.configuration-option.is-selected strong {
+    color: #fbbf24;
+}
+
+.step-submit {
+    width: 100%;
+    min-height: 38px;
+    margin-top: 10px;
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    border-radius: 7px;
+    color: #111827;
+    background: #fbbf24;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 850;
+}
+
+.step-submit[hidden] {
+    display: none;
+}
+
+.step-submit:hover:not(:disabled) {
+    background: #fcd34d;
+}
+
+.step-submit:disabled {
+    border-color: #46535c;
+    color: #74818a;
+    background: #2b343a;
+    cursor: default;
+}
+
+.step-feedback {
+    min-height: 0;
+    margin: 8px 0 0;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.step-feedback:empty {
+    display: none;
+}
+
+.step-feedback.is-correct {
+    color: #34d399;
+}
+
+.step-feedback.is-acceptable {
+    color: #fbbf24;
+}
+
+.step-feedback.is-incorrect {
+    color: #fca5a5;
+}
+
+.device-palette {
+    display: grid;
+    gap: 7px;
+}
+
+.device-card {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #354047;
+    border-radius: 8px;
+    color: #d8e0e5;
+    background: #20282e;
+    cursor: grab;
+    text-align: left;
+}
+
+.device-card[hidden] {
+    display: none;
+}
+
+.device-card:hover {
+    border-color: #667681;
+    background: #273138;
+}
+
+.device-card:active {
+    cursor: grabbing;
+}
+
+.device-card small {
+    display: block;
+    margin-top: 2px;
+    color: #7f8d96;
+    font-size: 0.63rem;
+}
+
+.device-symbol {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 6px;
+    color: #11171b;
+    background: #fbbf24;
+    font-size: 1.25rem;
+    font-weight: 900;
+}
+
+.final-plan-review {
+    padding: 14px 14px 16px 38px;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    border-radius: 10px;
+    background: rgba(52, 211, 153, 0.07);
+}
+
+.final-plan-review[hidden] {
+    display: none;
+}
+
+.final-plan-review .section-number {
+    background: #34d399;
+}
+
+.final-plan-review > strong {
+    color: #34d399;
+    font-size: 0.82rem;
+}
+
+.final-plan-review p {
+    margin: 6px 0 0;
+    color: #aab6be;
+    font-size: 0.72rem;
+    line-height: 1.45;
+}
+
+.planner-workspace {
+    display: grid;
+    min-width: 0;
+    grid-template-rows: auto 1fr auto;
+    padding: 22px 28px;
+    background: radial-gradient(circle at 50% 40%, rgba(40, 50, 57, 0.12), rgba(23, 30, 34, 0.04) 68%);
+}
+
+.workspace-toolbar,
+.planner-status {
+    display: flex;
+    align-items: center;
+}
+
+.workspace-toolbar {
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.workspace-toolbar div > span {
+    display: block;
+    color: #fbbf24;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+.workspace-toolbar strong {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.9rem;
+}
+
+.trench-stage {
+    position: relative;
+    display: grid;
+    min-height: 520px;
+    place-items: center;
+    padding: 55px;
+}
+
+.trench-measurement-guides {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    pointer-events: none;
+}
+
+.trench-measurement-guides[hidden] {
+    display: none;
+}
+
+.measurement-guide {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    transform-origin: 0 50%;
+    color: #fbbf24;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7));
+}
+
+.measurement-guide-width {
+    left: 0;
+    top: 0;
+}
+
+.measurement-guide-depth {
+    left: 0;
+    top: 0;
+}
+
+.shield-placement-guide {
+    z-index: 3;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+}
+
+.shield-placement-guide[hidden] {
+    display: none;
+}
+
+.shield-placement-guide strong {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.measurement-line {
+    flex: 1;
+    border-top: 2px dashed #fbbf24;
+}
+
+.measurement-cap {
+    width: 2px;
+    height: 15px;
+    background: #fbbf24;
+}
+
+.measurement-guide strong {
+    margin: 0 10px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    color: #111827;
+    background: #fbbf24;
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+
+.measurement-guide-width strong {
+    transform: rotate(180deg);
+}
+
+.measurement-guide-depth strong {
+    margin: 0 10px;
+}
+
+.scene-instruction {
+    position: absolute;
+    bottom: 22px;
+    left: 50%;
+    display: grid;
+    padding: 9px 13px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    color: #d6dee3;
+    background: rgba(17, 23, 27, 0.78);
+    text-align: center;
+    transform: translateX(-50%);
+}
+
+.scene-instruction span {
+    margin-top: 3px;
+    color: #8d9aa3;
+    font-size: 0.7rem;
+}
+
+.scene-instruction.is-hidden {
+    display: none;
+}
+
+.trench-drop-zone {
+    position: relative;
+    width: min(72%, 560px);
+    aspect-ratio: 10 / 16;
+    overflow: hidden;
+    border: 8px solid #80613b;
+    box-shadow: inset 0 0 45px #000, 0 0 0 2px #3c2c1c, 0 24px 45px rgba(0, 0, 0, 0.35);
+    background: #181411;
+}
+
+.trench-drop-zone.is-drag-over {
+    border-color: #fbbf24;
+    box-shadow: inset 0 0 45px #000, 0 0 0 3px rgba(251, 191, 36, 0.35);
+}
+
+.trench-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+    background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+}
+
+.empty-trench-message {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    color: #75695e;
+    text-align: center;
+    pointer-events: none;
+}
+
+.empty-trench-message.is-hidden {
+    display: none;
+}
+
+.empty-trench-message span {
+    margin-top: 4px;
+    font-size: 0.75rem;
+}
+
+.placed-device {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    border: 2px solid #fbbf24;
+    border-radius: 6px;
+    color: #11171b;
+    background: rgba(251, 191, 36, 0.88);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.35);
+    cursor: move;
+    font-size: 0.62rem;
+    font-weight: 900;
+    text-align: center;
+    user-select: none;
+}
+
+.dimension {
+    position: absolute;
+    color: #84929b;
+    font-size: 0.68rem;
+}
+
+.dimension-length {
+    top: 50%;
+    left: 7%;
+    transform: rotate(-90deg);
+}
+
+.dimension-width {
+    top: 7%;
+    left: 50%;
+}
+
+.planner-status {
+    gap: 7px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid #303b42;
+    border-radius: 8px;
+    color: #88969f;
+    background: #151b1f;
+    font-size: 0.75rem;
+}
+
+.planner-status strong {
+    color: #e2e8ec;
+}
+
+.geotechnical-report {
+    width: min(590px, calc(100vw - 32px));
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #3a464e;
+    border-radius: 18px;
+    color: #f8fafc;
+    background: #12191d;
+    box-shadow: 0 26px 90px rgba(0, 0, 0, 0.62);
+}
+
+.geotechnical-report::backdrop {
+    background: rgba(3, 7, 9, 0.72);
+    backdrop-filter: blur(4px);
+}
+
+.geotechnical-report header {
+    position: relative;
+    padding: 22px 26px 18px;
+    border-bottom: 1px solid #303b42;
+}
+
+.geotechnical-report h2 {
+    margin: 3px 0 0;
+    font-size: 1.4rem;
+}
+
+.geotechnical-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 20px 26px 14px;
+    padding: 14px;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 11px;
+    background: rgba(251, 191, 36, 0.06);
+}
+
+.soil-type-badge {
+    padding: 8px 10px;
+    border-radius: 7px;
+    color: #111827;
+    background: #fbbf24;
+    font-weight: 900;
+}
+
+.geotechnical-summary div {
+    display: grid;
+    gap: 3px;
+}
+
+.geotechnical-summary div span {
+    color: #9ba8b2;
+    font-size: 0.78rem;
+}
+
+.geotechnical-data {
+    margin: 0 26px;
+}
+
+.geotechnical-data div {
+    display: grid;
+    grid-template-columns: 145px 1fr;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid #293238;
+}
+
+.geotechnical-data dt {
+    color: #8f9ca6;
+    font-size: 0.76rem;
+}
+
+.geotechnical-data dd {
+    margin: 0;
+    color: #e0e6ea;
+    font-size: 0.8rem;
+}
+
+.geotechnical-warning {
+    margin: 18px 26px;
+    padding: 13px 14px;
+    border-left: 3px solid #fbbf24;
+    background: #1a2227;
+}
+
+.geotechnical-warning strong {
+    font-size: 0.82rem;
+}
+
+.geotechnical-warning p {
+    margin: 5px 0 0;
+    color: #a7b3bc;
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+
+.geotechnical-report > .hazard-action {
+    display: block;
+    margin: 0 auto 24px;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #fbbf24;
+}
+
+@media (max-width: 900px) {
+    .planner-layout {
+        grid-template-columns: 310px minmax(430px, 1fr);
+    }
+
+    .planner-sidebar {
+        padding: 16px;
+    }
+
+    .planner-workspace {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 560px) {
+    .controls-panel {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+    }
+
+    .show-controls {
+        top: 12px;
+        left: 12px;
+    }
+
+    .hazard-hint {
+        top: 12px;
+        right: auto;
+        left: 50%;
+    }
+
+    .trench-setup-panel {
+        top: 70px;
+        min-width: calc(100vw - 24px);
+    }
+
+    .mentor-panel {
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+    }
+
+    .mentor-message {
+        display: block;
+        padding: 0 16px 16px;
+    }
+
+    .mentor-shortcut {
+        display: block;
+        margin-top: 10px;
+    }
+
+    .mentor-toggle-label {
+        display: none;
+    }
+
+    .interaction-prompt {
+        top: 12px;
+        width: max-content;
+        max-width: calc(100vw - 24px);
+    }
+}
+@keyframes prompt-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 8px);
+    }
+}

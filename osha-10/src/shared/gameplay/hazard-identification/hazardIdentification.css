@@ -1,0 +1,46 @@
+.hazard-hint {
+    position: fixed;
+    z-index: 10;
+    top: 24px;
+    right: auto;
+    left: 50%;
+    display: flex;
+    min-height: 42px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    border-radius: 11px;
+    color: #f8fafc;
+    background: rgba(13, 18, 22, 0.88);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+    cursor: pointer;
+    font-weight: 750;
+    backdrop-filter: blur(12px);
+    transform: translateX(-50%);
+}
+
+.hazard-hint[hidden] {
+    display: none;
+}
+
+.hazard-hint:hover {
+    background: rgba(44, 48, 45, 0.94);
+}
+
+.hazard-hint:disabled {
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #82909c;
+    cursor: default;
+}
+
+.hint-icon {
+    color: #fbbf24;
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.hazard-hint.is-complete .hint-icon {
+    color: #34d399;
+}
+

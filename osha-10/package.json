@@ -4,9 +4,28 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "vite --mode module-2",
+    "dev:module-1": "vite --mode module-1",
+    "dev:module-2": "vite --mode module-2",
+    "dev:module-3": "vite --mode module-3",
+    "dev:module-4": "vite --mode module-4",
+    "dev:module-5": "vite --mode module-5",
+    "dev:module-6": "vite --mode module-6",
+    "build": "npm run build:module-2",
+    "build:module-1": "vite build --mode module-1",
+    "build:module-2": "vite build --mode module-2",
+    "build:module-3": "vite build --mode module-3",
+    "build:module-4": "vite build --mode module-4",
+    "build:module-5": "vite build --mode module-5",
+    "build:module-6": "vite build --mode module-6",
+    "build:all": "npm run build:module-1 && npm run build:module-2 && npm run build:module-3 && npm run build:module-4 && npm run build:module-5 && npm run build:module-6",
+    "preview": "vite preview --mode module-2",
+    "preview:module-1": "vite preview --mode module-1",
+    "preview:module-2": "vite preview --mode module-2",
+    "preview:module-3": "vite preview --mode module-3",
+    "preview:module-4": "vite preview --mode module-4",
+    "preview:module-5": "vite preview --mode module-5",
+    "preview:module-6": "vite preview --mode module-6"
   },
   "devDependencies": {
     "vite": "^5.4.19"

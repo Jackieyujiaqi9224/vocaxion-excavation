@@ -1,0 +1,114 @@
+.start-screen {
+    position: fixed;
+    z-index: 200;
+    inset: 0;
+    display: grid;
+    overflow: hidden;
+    place-items: center;
+    background: #101820;
+    opacity: 1;
+    transition: opacity 400ms ease;
+}
+
+.start-screen[hidden] {
+    display: none;
+}
+
+.start-screen.is-leaving {
+    pointer-events: none;
+    opacity: 0;
+}
+
+.start-screen-background {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.start-screen::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(4, 8, 11, 0.18),
+        rgba(4, 8, 11, 0.48) 58%,
+        rgba(4, 8, 11, 0.78)
+    );
+    content: "";
+}
+
+.start-screen-content {
+    position: relative;
+    z-index: 1;
+    width: min(900px, calc(100vw - 40px));
+    padding: 40px;
+    text-align: center;
+    text-shadow: 0 3px 20px rgba(0, 0, 0, 0.8);
+}
+
+.start-screen h1 {
+    margin: 0 0 56px;
+    font-size: clamp(2.4rem, 7vw, 5.8rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+}
+
+.start-game-button {
+    min-width: 190px;
+    padding: 15px 30px;
+    border: 2px solid #fbbf24;
+    border-radius: 8px;
+    background: #fbbf24;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    color: #111820;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.start-game-button:hover:not(:disabled),
+.start-game-button:focus-visible {
+    background: #fcd34d;
+    transform: translateY(-2px);
+}
+
+.start-game-button:disabled {
+    border-color: rgba(255, 255, 255, 0.45);
+    background: rgba(17, 24, 32, 0.72);
+    color: rgba(255, 255, 255, 0.72);
+    cursor: wait;
+}
+
+.start-screen-logos {
+    position: absolute;
+    z-index: 1;
+    bottom: 28px;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: 72px;
+    transform: translateX(-50%);
+}
+
+.start-screen-logos img {
+    width: auto;
+    max-width: min(32vw, 185px);
+    height: 42px;
+    object-fit: contain;
+}
+
+@media (max-height: 620px) {
+    .start-screen-logos {
+        bottom: 14px;
+        gap: 100px;
+    }
+
+    .start-screen-logos img {
+        height: 32px;
+    }
+}
+
