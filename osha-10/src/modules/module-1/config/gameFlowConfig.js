@@ -1,7 +1,7 @@
 export const MODULE_ONE_FLOW_STEPS = Object.freeze({
     HAZARD_IDENTIFICATION: "hazard-identification",
     TRENCH_PLACEMENT: "trench-placement",
-    AWAITING_NEXT_EVENT: "awaiting-next-event",
+    COMPLETE: "complete",
 });
 
 export const moduleOneGameFlowConfig = Object.freeze({
@@ -17,7 +17,7 @@ export const moduleOneGameFlowConfig = Object.freeze({
             id: MODULE_ONE_FLOW_STEPS.TRENCH_PLACEMENT,
             mechanicId: "trenchPlacement",
             activation: "manual",
-            nextStepId: MODULE_ONE_FLOW_STEPS.AWAITING_NEXT_EVENT,
+            nextStepId: MODULE_ONE_FLOW_STEPS.COMPLETE,
             objective: Object.freeze({
                 actionId: "openTrenchPlanner",
                 statusLabel: "Both hazards have been corrected",
@@ -27,8 +27,8 @@ export const moduleOneGameFlowConfig = Object.freeze({
             }),
         }),
         Object.freeze({
-            id: MODULE_ONE_FLOW_STEPS.AWAITING_NEXT_EVENT,
-            mechanicId: "awaitingNextEvent",
+            id: MODULE_ONE_FLOW_STEPS.COMPLETE,
+            mechanicId: "moduleCompletion",
         }),
     ]),
 });

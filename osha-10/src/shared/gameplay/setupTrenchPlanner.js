@@ -1341,6 +1341,8 @@ export function setupTrenchPlanner({
         enterPlannerView("reinspection");
     };
 
+    const isBlocking = () => isOpen;
+
     return {
         open,
         openReinspection,
@@ -1348,12 +1350,16 @@ export function setupTrenchPlanner({
             completionListeners.add(listener);
             return () => completionListeners.delete(listener);
         },
-        onReinspectionComplete(listener) {
-            reinspectionCompletionListeners.add(listener);
-            return () => reinspectionCompletionListeners.delete(listener);
-        },
-        isOpen: () => isOpen,
         isComplete: () => isComplete,
-        isReinspectionComplete: () => isReinspectionComplete,
+        isOpen: isBlocking,
+        isBlocking,
+        reinspection: {
+            onComplete(listener) {
+                reinspectionCompletionListeners.add(listener);
+                return () => reinspectionCompletionListeners.delete(listener);
+            },
+            isComplete: () => isReinspectionComplete,
+            isBlocking,
+        },
     };
 }

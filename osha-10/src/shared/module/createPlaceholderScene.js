@@ -28,5 +28,5 @@ export function createPlaceholderScene({ engine, metadata }) {
         notice.hidden = false;
     }
 
-    return scene;
+    return { scene };
 }
