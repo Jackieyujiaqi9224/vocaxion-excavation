@@ -36,5 +36,6 @@ export function setupModuleCompletion({ onComplete, scoring }) {
             }, MODULE_COMPLETION_DELAY_MS);
         },
         isOpen: () => dialog.open,
+        isBlocking: () => isScheduled,
     };
 }

@@ -405,5 +405,6 @@ export function setupUtilityMarking({ canvas, config, scoring }) {
             return () => completionListeners.delete(listener);
         },
         isActive: () => isActive,
+        isBlocking: () => isActive,
     };
 }

@@ -330,6 +330,11 @@ export function setupComicChoiceScene({ canvas, config, scoring }) {
         screen.classList.add("is-visible");
     };
 
+    const onBeforeComplete = (listener) => {
+        beforeCloseListeners.add(listener);
+        return () => beforeCloseListeners.delete(listener);
+    };
+
     return {
         activate(delay = 0) {
             if (isActive || activationTimer !== null) return;
@@ -339,11 +344,9 @@ export function setupComicChoiceScene({ canvas, config, scoring }) {
             completionListeners.add(listener);
             return () => completionListeners.delete(listener);
         },
-        onBeforeClose(listener) {
-            beforeCloseListeners.add(listener);
-            return () => beforeCloseListeners.delete(listener);
-        },
+        onBeforeComplete,
         getCurrentPageId: () => currentPage?.id ?? null,
         isActive: () => isActive,
+        isBlocking: () => isActive,
     };
 }

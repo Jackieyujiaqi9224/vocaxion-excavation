@@ -38,10 +38,10 @@ Every `module.js` entry exports `moduleMetadata`, `interfaceConfig`, and
 `createScene(context)`. Module metadata controls the browser title and build
 identity; interface configuration supplies the visible start-screen and HUD
 content. The scene factory receives the shared Babylon engine, canvas, scoring
-system, a start-handler registration function, and module-complete callback.
-Register the module flow with `registerStartHandler(gameFlow.start)` so input,
-movement, scoring, and full-screen mechanics stay inactive until the learner
-presses Start.
+system, and a module-complete callback. It returns `{ scene, start }`. Call
+`start` only after the learner presses Start so input, movement, scoring, and
+full-screen mechanics stay inactive during load. Scaffold modules may omit
+`start`.
 
 ## Shared interface structure
 

@@ -71,19 +71,6 @@ async function main() {
         ? null
         : setupBackgroundMusic();
     backgroundMusic?.play();
-    let gameStartHandler = null;
-    const startScreen = setupStartScreen({
-        readyLabel: interfaceConfig.startScreen.readyLabel,
-        onStart: () => {
-            scoring.reset();
-            if (moduleMetadata.status !== "scaffold") {
-                scoreDisplay.show();
-                gameTimer.start();
-            }
-            backgroundMusic?.pause();
-            gameStartHandler?.();
-        },
-    });
     const canvas = document.getElementById("renderCanvas");
     if (!canvas) {
         throw new Error('Missing required canvas element "#renderCanvas".');
@@ -106,28 +93,45 @@ async function main() {
     setupInterface(interfaceConfig.mainInterface);
 
     let scene;
+    let start;
     try {
-        scene = await createScene({
+        const created = await createScene({
             engine,
             canvas,
             scoring,
-            registerStartHandler(handler) {
-                if (typeof handler !== "function") {
-                    throw new Error("The game start handler must be a function");
-                }
-                if (gameStartHandler) {
-                    throw new Error("A game start handler is already registered");
-                }
-                gameStartHandler = handler;
-            },
             onModuleComplete: () => {
                 gameTimer.stop();
             },
         });
+        scene = created?.scene;
+        start = created?.start;
+        if (!scene) {
+            throw new Error(`${moduleMetadata.title} did not return a scene`);
+        }
+        if (
+            moduleMetadata.status !== "scaffold" &&
+            typeof start !== "function"
+        ) {
+            throw new Error(
+                `${moduleMetadata.title} did not return a start function`
+            );
+        }
     } catch (error) {
         engine.dispose();
         throw error;
     }
+    const startScreen = setupStartScreen({
+        readyLabel: interfaceConfig.startScreen.readyLabel,
+        onStart: () => {
+            scoring.reset();
+            if (moduleMetadata.status !== "scaffold") {
+                scoreDisplay.show();
+                gameTimer.start();
+            }
+            backgroundMusic?.pause();
+            start?.();
+        },
+    });
     startScreen.markReady();
 
     let diagnostics = null;
