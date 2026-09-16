@@ -93,6 +93,31 @@ export const trenchPlacementConfig = Object.freeze({
         }),
     }),
     trenchDimensions: Object.freeze({ length: 35, width: 6, depth: 8 }),
+    geotechnicalReport: Object.freeze({
+        soilType: "TYPE C",
+        classification: "Granular, previously disturbed soil",
+        details: Object.freeze([
+            Object.freeze({
+                label: "Moisture",
+                value: "Moist; no standing water observed",
+            }),
+            Object.freeze({
+                label: "Wall condition",
+                value: "Loose material and minor surface sloughing",
+            }),
+            Object.freeze({
+                label: "Vibration exposure",
+                value: "Nearby roadway and construction equipment",
+            }),
+            Object.freeze({
+                label: "Surface loads",
+                value: "Spoil piles relocated away from the trench edge",
+            }),
+        ]),
+        warningTitle: "Competent-person review required",
+        warning:
+            "This training report assumes Type C conditions. A competent person must verify soil classification and inspect changing site conditions before workers enter.",
+    }),
     sceneNodes: Object.freeze({
         cameraPosition: "Camera Position",
         depthTop: "y1",

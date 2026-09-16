@@ -14,11 +14,16 @@ export function setupGameTimer() {
     const timer = document.getElementById("gameTimer");
     const value = document.getElementById("gameTimerValue");
     let startedAt = null;
+    let stoppedAt = null;
     let intervalId = null;
+
+    const elapsedMilliseconds = () => startedAt === null
+        ? 0
+        : (stoppedAt ?? performance.now()) - startedAt;
 
     const render = () => {
         if (startedAt === null) return;
-        value.textContent = formatElapsedTime(performance.now() - startedAt);
+        value.textContent = formatElapsedTime(elapsedMilliseconds());
     };
 
     return {
@@ -31,11 +36,13 @@ export function setupGameTimer() {
         },
         stop() {
             if (startedAt === null || intervalId === null) return;
+            stoppedAt = performance.now();
             window.clearInterval(intervalId);
             intervalId = null;
             render();
             timer.classList.add("is-stopped");
             stats.classList.add("is-stopped");
         },
+        getElapsedSeconds: () => Math.floor(elapsedMilliseconds() / 1000),
     };
 }

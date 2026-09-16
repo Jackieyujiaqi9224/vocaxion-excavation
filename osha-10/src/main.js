@@ -1,4 +1,5 @@
 import { Engine } from "@babylonjs/core/Engines/engine.js";
+import { createCompletionReporter } from "./shared/api/createCompletionReporter.js";
 import { createScene, interfaceConfig, moduleMetadata } from "@game-module";
 import "./shared/styles/base.css";
 import { setupBackgroundMusic } from "./shared/audio/setupBackgroundMusic.js";
@@ -62,6 +63,10 @@ async function main() {
     createStartScreenUi({ root: app, config: interfaceConfig.startScreen });
 
     const gameTimer = setupGameTimer();
+    const completionReporter = createCompletionReporter({
+        endpoint: import.meta.env.VITE_TRAINING_COMPLETION_URL,
+        moduleId: moduleMetadata.id,
+    });
     const scoring = createScoringSystem({
         correctPoints: 10,
         incorrectPoints: -5,
@@ -101,6 +106,10 @@ async function main() {
             scoring,
             onModuleComplete: () => {
                 gameTimer.stop();
+                return completionReporter.submit({
+                    score: scoring.getScore(),
+                    elapsedSeconds: gameTimer.getElapsedSeconds(),
+                });
             },
         });
         scene = created?.scene;
