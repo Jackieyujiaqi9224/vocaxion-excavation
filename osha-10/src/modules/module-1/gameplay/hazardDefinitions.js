@@ -11,6 +11,7 @@ export const hazardIdentificationUiConfig = Object.freeze({
 export const damagedCableHazardDefinition = Object.freeze({
     id: "damagedCable",
     meshNames: Object.freeze(["Bad Cable"]),
+    hitAreaPadding: 0.35,
     highlightColor: Object.freeze([1, 0.55, 0.05]),
     cursorClass: "hazard-hover",
     resolution: Object.freeze({

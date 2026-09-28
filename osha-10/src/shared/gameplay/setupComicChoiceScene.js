@@ -4,12 +4,6 @@ import {
 } from "../audio/gameFeedbackSounds.js";
 import { createComicChoiceUi } from "./comic-choice/createComicChoiceUi.js";
 
-function requireElement(id) {
-    const element = document.getElementById(id);
-    if (!element) throw new Error(`Missing comic mechanic element #${id}`);
-    return element;
-}
-
 function validateConfig(config) {
     if (!config?.id) {
         throw new Error("Comic config needs an id");
@@ -123,9 +117,9 @@ function validateConfig(config) {
     return pageById;
 }
 
-export function setupComicChoiceScene({ canvas, config, scoring }) {
+export function setupComicChoiceScene({ canvas, config, scoring, uiIdPrefix = "" }) {
     const pageById = validateConfig(config);
-    createComicChoiceUi({ config });
+    const { getElement: requireElement } = createComicChoiceUi({ config, idPrefix: uiIdPrefix });
     const screen = requireElement("stormScene");
     const background = requireElement("stormSceneBackground");
     const portrait = requireElement("stormDialogueHeadshot");

@@ -116,18 +116,18 @@
     background: #fde68a;
 }
 
-#stormAnswerFeedback {
+[data-comic-feedback] {
     min-height: 1.25em;
     margin: 8px 0 0;
     font-size: 0.78rem;
     font-weight: 800;
 }
 
-#stormAnswerFeedback.is-correct {
+[data-comic-feedback].is-correct {
     color: #047857;
 }
 
-#stormAnswerFeedback.is-incorrect {
+[data-comic-feedback].is-incorrect {
     color: #b91c1c;
 }
 
@@ -157,6 +157,26 @@
     cursor: default;
 }
 
+/* Module 1 has four long answers; let its comic grow and scroll on small screens. */
+body[data-module-id="module-1"] .storm-dialogue {
+    height: auto;
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    padding: 22px 26px 22px 174px;
+}
+
+body[data-module-id="module-1"] .storm-dialogue-headshot {
+    top: 22px;
+    transform: none;
+}
+
+body[data-module-id="module-1"] .storm-dialogue-navigation {
+    position: static;
+    justify-content: flex-end;
+    margin-top: 18px;
+    flex-direction: row;
+}
+
 .storm-dialogue-navigation span {
     min-width: 34px;
     color: #334155;
@@ -166,6 +186,18 @@
 }
 
 @media (max-width: 640px) {
+    body[data-module-id="module-1"] .storm-dialogue {
+        display: block;
+        padding: 18px;
+    }
+
+    body[data-module-id="module-1"] .storm-dialogue-headshot {
+        position: static;
+        width: 64px;
+        height: 64px;
+        margin-bottom: 12px;
+    }
+
     .storm-dialogue {
         height: min(390px, calc(100vh - 40px));
         padding: 17px 64px 17px 116px;
@@ -183,4 +215,3 @@
         flex-direction: column;
     }
 }
-

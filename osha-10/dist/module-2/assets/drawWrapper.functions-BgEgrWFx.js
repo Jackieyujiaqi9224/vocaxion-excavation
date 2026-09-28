@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-B0Z9INg1.js";function t(e){return e.getPipelineContext===void 0}var n=e((()=>{}));export{n,t};

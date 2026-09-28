@@ -28,6 +28,20 @@
     user-select: none;
 }
 
+.utility-marked-line {
+    position: absolute;
+    z-index: 2;
+    height: 5px;
+    background: var(--utility-marker-color);
+    transform-origin: 0 50%;
+    box-shadow: 0 0 3px #111;
+    pointer-events: none;
+}
+
+.utility-marked-line[hidden] {
+    display: none;
+}
+
 .utility-flag-layer {
     position: absolute;
     z-index: 3;
@@ -382,4 +396,3 @@ body.utility-marking-open .interaction-prompt,
 body.utility-marking-open .trench-setup-panel {
     visibility: hidden;
 }
-

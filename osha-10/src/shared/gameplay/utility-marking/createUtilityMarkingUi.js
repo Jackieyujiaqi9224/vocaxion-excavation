@@ -8,6 +8,7 @@ export function createUtilityMarkingUi({
     appendUi(root, `
         <section id="utilityMarkingScreen" class="utility-marking-screen" aria-labelledby="utilityMarkingTitle" hidden>
             <img id="utilityMarkingBackground" class="utility-marking-background" alt="">
+            <div id="utilityMarkedLine" class="utility-marked-line" aria-hidden="true" hidden></div>
             <div id="utilityFlagLayer" class="utility-flag-layer" hidden></div>
             <div id="digZoneLayer" class="dig-zone-layer" hidden></div>
             <div id="utilityCallCard" class="utility-call-card">

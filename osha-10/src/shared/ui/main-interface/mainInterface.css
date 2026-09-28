@@ -43,10 +43,6 @@ body.module-scaffold .game-stats {
     display: none;
 }
 
-body[data-module-id="module-1"] .utility-marking-screen {
-    display: none;
-}
-
 .game-stats {
     position: fixed;
     z-index: 110;

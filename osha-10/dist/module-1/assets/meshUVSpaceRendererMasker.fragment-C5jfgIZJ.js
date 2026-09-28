@@ -1,0 +1,3 @@
+import{n as e,r as t}from"./rolldown-runtime-B0Z9INg1.js";import{n,t as r}from"./shaderStore-DBiNfWDC.js";var i=t({meshUVSpaceRendererMaskerPixelShaderWGSL:()=>s}),a,o,s,c=e((()=>{n(),a=`meshUVSpaceRendererMaskerPixelShader`,o=`varying vUV: vec2f;@fragment
+fn main(input: FragmentInputs)->FragmentOutputs {fragmentOutputs.color= vec4f(1.0,1.0,1.0,1.0);}
+`,r.ShadersStoreWGSL[a]||(r.ShadersStoreWGSL[a]=o),s={name:a,shader:o}}));export{s as n,i as r,c as t};

@@ -14,10 +14,11 @@ import {
 } from "../audio/gameFeedbackSounds.js";
 import "../assets/registerGltfLoader.js";
 import { createTrenchSetupUi } from "./trench-setup/createTrenchSetupUi.js";
+import { syncCameraToMarker } from "../scene/syncCameraToMarker.js";
 
 function validateConfig(config) {
     if (!config?.id) throw new Error("Trench config needs an id");
-    if (!config.protectionSystems?.length) {
+    if (!config.measurementOnly && !config.protectionSystems?.length) {
         throw new Error(`Trench config ${config.id} needs protection systems`);
     }
     if (!Array.isArray(config.devices)) {
@@ -53,6 +54,7 @@ function validateConfig(config) {
         if (
             protection.accepted &&
             !protection.completeOnSelection &&
+            !protection.completeOnConfiguration &&
             !protection.placement
         ) {
             throw new Error(
@@ -97,7 +99,7 @@ function validateConfig(config) {
         });
     });
 
-    if (!config.protectionSystems.some(
+    if (!config.measurementOnly && !config.protectionSystems.some(
         (protection) => protection.available !== false
     )) {
         throw new Error(`Trench config ${config.id} has no available protection`);
@@ -124,9 +126,16 @@ export function setupTrenchPlanner({
     trench,
     config,
     scoring,
+    uiIdPrefix = "",
+    onConfigurationAccepted = () => {},
+    onProtectionSelected = () => {},
+    onConfigurationSelected = () => {},
+    validatePlacement = () => null,
+    onPlacementAccepted = () => {},
+    getShieldMeasurements = null,
 }) {
     validateConfig(config);
-    createTrenchSetupUi({ config });
+    const { container: uiRoot, getElement } = createTrenchSetupUi({ config, idPrefix: uiIdPrefix });
     const recordCorrect = (itemId) => {
         playCorrectAnswerSound();
         scoring.recordCorrect({
@@ -143,41 +152,41 @@ export function setupTrenchPlanner({
             itemId,
         });
     };
-    const planner = document.getElementById("trenchPlanner");
-    const planningSidebar = document.getElementById("trenchPlanningSidebar");
-    const reinspectionPanel = document.getElementById(
+    const planner = getElement("trenchPlanner");
+    const planningSidebar = getElement("trenchPlanningSidebar");
+    const reinspectionPanel = getElement(
         "trenchReinspectionPanel"
     );
-    const reinspectionInstruction = document.getElementById(
+    const reinspectionInstruction = getElement(
         "trenchReinspectionInstruction"
     );
-    const wallsInspection = document.getElementById("trenchWallsInspection");
-    const shieldInspection = document.getElementById(
+    const wallsInspection = getElement("trenchWallsInspection");
+    const shieldInspection = getElement(
         "trenchShieldInspection"
     );
-    const egressInspection = document.getElementById(
+    const egressInspection = getElement(
         "trenchEgressInspection"
     );
-    const completeReinspectionButton = document.getElementById(
+    const completeReinspectionButton = getElement(
         "completeTrenchReinspection"
     );
-    const emptyMessage = document.getElementById("emptyTrenchMessage");
-    const reportControl = document.getElementById(
+    const emptyMessage = getElement("emptyTrenchMessage");
+    const reportControl = getElement(
         "geotechnicalReportControl"
     );
-    const reportButton = document.getElementById("openGeotechnicalReport");
-    const reportStatus = document.getElementById("geotechnicalReportStatus");
-    const reportDialog = document.getElementById("geotechnicalReport");
-    const closeReportButton = document.getElementById(
+    const reportButton = getElement("openGeotechnicalReport");
+    const reportStatus = getElement("geotechnicalReportStatus");
+    const reportDialog = getElement("geotechnicalReport");
+    const closeReportButton = getElement(
         "closeGeotechnicalReport"
     );
-    const acknowledgeReportButton = document.getElementById(
+    const acknowledgeReportButton = getElement(
         "acknowledgeGeotechnicalReport"
     );
-    const measureButton = document.getElementById("measureTrench");
-    const measurementSection = document.getElementById("measurementSection");
-    const measurements = document.getElementById("trenchMeasurements");
-    const measurementGuides = document.getElementById(
+    const measureButton = getElement("measureTrench");
+    const measurementSection = getElement("measurementSection");
+    const measurements = getElement("trenchMeasurements");
+    const measurementGuides = getElement(
         "trenchMeasurementGuides"
     );
     const trenchStage = measurementGuides.parentElement;
@@ -187,66 +196,68 @@ export function setupTrenchPlanner({
     const depthGuide = measurementGuides.querySelector(
         ".measurement-guide-depth"
     );
-    const shieldPlacementGuide = document.getElementById(
+    const shieldPlacementGuide = getElement(
         "shieldPlacementGuide"
     );
-    const shieldPlacementValue = document.getElementById(
+    const shieldPlacementValue = getElement(
         "shieldPlacementValue"
     );
-    const shieldTopPlacementGuide = document.getElementById(
+    const shieldTopPlacementGuide = getElement(
         "shieldTopPlacementGuide"
     );
-    const shieldTopPlacementValue = document.getElementById(
+    const shieldTopPlacementValue = getElement(
         "shieldTopPlacementValue"
     );
-    const guideWidthValue = document.getElementById("guideWidthValue");
-    const guideDepthValue = document.getElementById("guideDepthValue");
-    const dimensionReadout = document.getElementById("dimensionReadout");
-    const protectionStatus = document.getElementById("protectionStatus");
-    const protectionSection = document.getElementById("protectionSection");
-    const submitMeasurements = document.getElementById("submitMeasurements");
-    const submitProtection = document.getElementById("submitProtection");
-    const submitConfiguration = document.getElementById(
+    const guideWidthValue = getElement("guideWidthValue");
+    const guideDepthValue = getElement("guideDepthValue");
+    const dimensionReadout = getElement("dimensionReadout");
+    const protectionStatus = getElement("protectionStatus");
+    const protectionSection = getElement("protectionSection");
+    protectionSection.hidden = config.measurementOnly === true;
+    const submitMeasurements = getElement("submitMeasurements");
+    const submitProtection = getElement("submitProtection");
+    const submitConfiguration = getElement(
         "submitConfiguration"
     );
-    const submitDevices = document.getElementById("submitDevices");
-    const measurementFeedback = document.getElementById(
+    const submitDevices = getElement("submitDevices");
+    const measurementFeedback = getElement(
         "measurementFeedback"
     );
-    const protectionFeedback = document.getElementById("protectionFeedback");
-    const configurationFeedback = document.getElementById(
+    const protectionFeedback = getElement("protectionFeedback");
+    const configurationFeedback = getElement(
         "configurationFeedback"
     );
-    const deviceFeedback = document.getElementById("deviceFeedback");
-    const egressSection = document.getElementById("egressSection");
-    const addEgressButton = document.getElementById("addEgress");
-    const egressFeedback = document.getElementById("egressFeedback");
-    const configurationSection = document.getElementById(
+    const deviceFeedback = getElement("deviceFeedback");
+    const egressSection = getElement("egressSection");
+    const addEgressButton = getElement("addEgress");
+    const egressFeedback = getElement("egressFeedback");
+    const configurationSection = getElement(
         "protectionConfiguration"
     );
-    const configurationTitle = document.getElementById("configurationTitle");
-    const protectionOptions = document.getElementById("protectionOptions");
-    const configurationOptions = document.getElementById(
+    const configurationTitle = getElement("configurationTitle");
+    const protectionOptions = getElement("protectionOptions");
+    const configurationOptions = getElement(
         "protectionConfigurationOptions"
     );
-    const deviceSection = document.getElementById("deviceSection");
-    const devicePalette = document.getElementById("devicePalette");
-    const deviceStepTitle = document.getElementById("deviceStepTitle");
-    const deviceStepHelp = document.getElementById("deviceStepHelp");
-    const finalPlanReview = document.getElementById("finalPlanReview");
-    const finalPlanSummary = document.getElementById("finalPlanSummary");
-    const setupCompleteDialog = document.getElementById(
+    const deviceSection = getElement("deviceSection");
+    const devicePalette = getElement("devicePalette");
+    const deviceStepTitle = getElement("deviceStepTitle");
+    const deviceStepHelp = getElement("deviceStepHelp");
+    const finalPlanReview = getElement("finalPlanReview");
+    const finalPlanSummary = getElement("finalPlanSummary");
+    const finalPlanTitle = getElement("finalPlanTitle");
+    const setupCompleteDialog = getElement(
         "setupCompleteDialog"
     );
-    const setupCompleteTitle = document.getElementById("setupCompleteTitle");
-    const setupCompleteDescription = document.getElementById(
+    const setupCompleteTitle = getElement("setupCompleteTitle");
+    const setupCompleteDescription = getElement(
         "setupCompleteDescription"
     );
-    const returnToMainScene = document.getElementById("returnToMainScene");
+    const returnToMainScene = getElement("returnToMainScene");
     const measurementInputs = [
-        document.getElementById("trenchLength"),
-        document.getElementById("trenchWidth"),
-        document.getElementById("trenchDepth"),
+        getElement("trenchLength"),
+        getElement("trenchWidth"),
+        getElement("trenchDepth"),
     ];
     const protectionById = new Map(
         config.protectionSystems.map((protection) => [
@@ -414,20 +425,7 @@ export function setupTrenchPlanner({
             cameraPosition.getAbsolutePosition()
         );
         if (config.sceneNodes.useAuthoredCameraRotation) {
-            // Use the complete world-space basis instead of the decomposed
-            // quaternion. glTF's handedness-conversion root contains a
-            // negative scale that a quaternion alone cannot preserve.
-            const authoredForward = cameraPosition
-                .getDirection(Vector3.Forward())
-                .normalize();
-            const authoredUp = cameraPosition
-                .getDirection(Vector3.Up())
-                .normalize();
-            planningCamera.rotationQuaternion = null;
-            planningCamera.upVector.copyFrom(authoredUp);
-            planningCamera.setTarget(
-                planningCamera.position.add(authoredForward)
-            );
+            syncCameraToMarker(planningCamera, cameraPosition, config.sceneNodes);
             return;
         }
         planningCamera.rotationQuaternion = null;
@@ -499,6 +497,38 @@ export function setupTrenchPlanner({
     };
 
     scene.onBeforeRenderObservable.add(positionMeasurementGuides);
+
+    if (getShieldMeasurements) {
+        const formatDistance = (feet) => {
+            const rounded = Math.round(Math.abs(feet) * 10) / 10;
+            return `${rounded} ft${feet < -0.05 ? " below" : ""}`;
+        };
+        scene.onBeforeRenderObservable.add(() => {
+            const measurement = isOpen ? getShieldMeasurements(verticalFeetPerWorldUnit) : null;
+            shieldPlacementGuide.hidden = !measurement;
+            shieldTopPlacementGuide.hidden = !measurement;
+            if (!measurement) return;
+            measurementPoints.cross.computeWorldMatrix(true);
+            measurementPoints.depthTop.computeWorldMatrix(true);
+            const bottom = measurementPoints.cross.getAbsolutePosition();
+            const top = measurementPoints.depthTop.getAbsolutePosition();
+            const drawEdgeGuide = (guide, trenchEdge, shieldY, offset) => {
+                const from = projectWorldToStage(trenchEdge);
+                const to = projectWorldToStage(new Vector3(trenchEdge.x, shieldY, trenchEdge.z));
+                from.x += offset;
+                to.x = from.x;
+                positionGuide(guide, from, to);
+                // Keep labels readable while the vertical guide changes direction.
+                const angle = Math.atan2(to.y - from.y, to.x - from.x);
+                guide.querySelector("strong").style.transform =
+                    `translateX(-50%) rotate(${-angle}rad)`;
+            };
+            drawEdgeGuide(shieldPlacementGuide, bottom, measurement.bounds.min.y, -45);
+            drawEdgeGuide(shieldTopPlacementGuide, top, measurement.bounds.max.y, 45);
+            shieldPlacementValue.textContent = formatDistance(measurement.bottomFeet);
+            shieldTopPlacementValue.textContent = formatDistance(measurement.topFeet);
+        });
+    }
 
     const updateWorkspaceState = () => {
         const count = placedDevices.length;
@@ -789,7 +819,7 @@ export function setupTrenchPlanner({
     shieldInspection.addEventListener("click", () => inspectItem("shield"));
     egressInspection.addEventListener("click", () => inspectItem("egress"));
 
-    document.querySelectorAll(".device-card").forEach((card) => {
+    uiRoot.querySelectorAll(".device-card").forEach((card) => {
         const getDevice = () => deviceById.get(card.dataset.device);
 
         card.addEventListener("dragstart", (event) => {
@@ -849,12 +879,24 @@ export function setupTrenchPlanner({
         }, config.completion.dialogDelayMs);
     };
 
+    const finishProtection = (result) => {
+        if (config.egress.enabled === true) {
+            isShieldPlacementAccepted = true;
+            egressSection.hidden = false;
+            protectionStatus.textContent = `${result.status ?? "Protection configured"} — add egress`;
+            addEgressButton.focus();
+            return;
+        }
+        completePlan(result);
+    };
+
     const removePlacedEgress = () => {
         if (!placedEgress) return;
 
         const index = placedDevices.indexOf(placedEgress);
         if (index >= 0) placedDevices.splice(index, 1);
-        placedEgress.dispose();
+        if (config.egress.sceneNodeName || config.egress.sceneNodeNamesByProtection) placedEgress.setEnabled(false);
+        else placedEgress.dispose();
         placedEgress = null;
         updateWorkspaceState();
     };
@@ -880,7 +922,7 @@ export function setupTrenchPlanner({
         finalPlanReview.hidden = true;
         setFeedback(configurationFeedback, "", "");
         setFeedback(deviceFeedback, "", "");
-        document.querySelectorAll(".configuration-option").forEach(
+        uiRoot.querySelectorAll(".configuration-option").forEach(
             (configuration) => {
                 configuration.classList.remove("is-selected");
                 configuration.setAttribute("aria-pressed", "false");
@@ -901,12 +943,14 @@ export function setupTrenchPlanner({
             setFeedback(protectionFeedback, "", "");
             resetDownstreamSteps();
             const protection = protectionById.get(selectedProtection);
+            onProtectionSelected(protection.id);
             protectionStatus.textContent =
                 `${protection.label} selected — submit to continue`;
         });
     });
 
     const renderConfigurationOptions = (protection) => {
+        configurationOptions.classList.toggle("configuration-options--shielding", protection.id === "shielding");
         configurationOptions.replaceChildren(
             ...protection.configurations.map((configuration) => {
                 const button = document.createElement("button");
@@ -915,6 +959,7 @@ export function setupTrenchPlanner({
                 button.dataset.configuration = configuration.id;
                 const label = document.createElement("strong");
                 label.textContent = configuration.label;
+                if (configuration.dimensions) label.classList.add("configuration-dimensions");
                 const detail = document.createElement("span");
                 detail.textContent = configuration.detail;
                 button.append(label, detail);
@@ -942,6 +987,7 @@ export function setupTrenchPlanner({
         }
         setFeedback(configurationFeedback, "", "");
         const protection = protectionById.get(selectedProtection);
+        onConfigurationSelected(protection.id, selectedConfiguration.id);
         protectionStatus.textContent =
             `${protection.label}: ${selectedConfiguration.summary} selected`;
     });
@@ -969,12 +1015,17 @@ export function setupTrenchPlanner({
                 `${protection.label} is acceptable. Configure it next.`,
             assessment === "preferred" ? "correct" : "acceptable"
         );
+        if (config.requirePreferredProtection && assessment !== "preferred") {
+            protectionStatus.textContent =
+                `${protection.label} is acceptable — select the preferred protection to continue`;
+            return;
+        }
         submitProtection.disabled = true;
         protectionOptions.querySelectorAll(".protection-option").forEach((option) => {
             option.disabled = true;
         });
         if (protection.completeOnSelection) {
-            completePlan({
+            finishProtection({
                 summary:
                     protection.completionSummary ??
                     protection.acceptedFeedback ??
@@ -1009,6 +1060,7 @@ export function setupTrenchPlanner({
     };
 
     submitConfiguration.addEventListener("click", () => {
+        if (submitConfiguration.disabled) return;
         if (!selectedConfiguration) {
             recordIncorrect("configuration-missing");
             setFeedback(
@@ -1020,6 +1072,19 @@ export function setupTrenchPlanner({
         }
 
         const protection = protectionById.get(selectedProtection);
+        if (protection.requirePreferredConfiguration && selectedConfiguration.assessment === "acceptable") {
+            setFeedback(configurationFeedback, selectedConfiguration.acceptedFeedback, "acceptable");
+            return;
+        }
+        if (selectedConfiguration.accepted === false) {
+            recordIncorrect(`configuration-${selectedConfiguration.id}`);
+            setFeedback(
+                configurationFeedback,
+                selectedConfiguration.rejectionFeedback ?? "Try another configuration.",
+                "incorrect"
+            );
+            return;
+        }
         const minimumExtraHeight =
             selectedConfiguration.rules?.minimumHeightAboveTrench;
         if (minimumExtraHeight !== undefined) {
@@ -1052,12 +1117,34 @@ export function setupTrenchPlanner({
         );
         protectionStatus.textContent =
             `${protection.label}: ${selectedConfiguration.summary}`;
+        onConfigurationAccepted(protection.id, selectedConfiguration.id);
+        if (protection.completeOnConfiguration) {
+            finishProtection({
+                summary: selectedConfiguration.completionSummary ?? protection.completionSummary,
+                status: `${protection.label}: ${selectedConfiguration.summary} accepted`,
+            });
+            return;
+        }
         configureDeviceStep();
     });
 
     submitDevices.addEventListener("click", () => {
+        if (submitDevices.disabled) return;
         const protection = protectionById.get(selectedProtection);
         const placement = protection.placement;
+        if (placement.external) {
+            const error = validatePlacement(protection.id, selectedConfiguration.id);
+            if (error) {
+                setFeedback(deviceFeedback, error, "incorrect");
+                return;
+            }
+            recordCorrect(`placement-${selectedConfiguration.id}`);
+            submitDevices.disabled = true;
+            onPlacementAccepted(protection.id, selectedConfiguration.id);
+            setFeedback(deviceFeedback, placement.acceptedFeedback, "correct");
+            finishProtection({ summary: placement.acceptedFeedback, status: "Shield placed" });
+            return;
+        }
         const placedShield = placedDevices.find(
             (device) => device.metadata?.type === "Trench shield"
         );
@@ -1125,26 +1212,37 @@ export function setupTrenchPlanner({
         setFeedback(egressFeedback, config.egress.loadingFeedback, "");
 
         try {
-            const ladderImport = await ImportMeshAsync(
-                config.egress.modelUrl,
-                scene
-            );
-            const ladderRoot = ladderImport.meshes.find(
-                (mesh) => !mesh.parent
-            );
+            const sceneNodeName = config.egress.sceneNodeNamesByProtection?.[selectedProtection]
+                ?? config.egress.sceneNodeName;
+            let ladderRoot;
+            let ladderMeshes;
+            if (sceneNodeName) {
+                ladderRoot = scene.getNodeByName(sceneNodeName);
+                if (!ladderRoot) {
+                    throw new Error(`Trench scene is missing ${sceneNodeName}`);
+                }
+                ladderMeshes = [ladderRoot, ...ladderRoot.getChildMeshes(false)];
+                ladderRoot.setEnabled(true);
+            } else {
+                const ladderImport = await ImportMeshAsync(config.egress.modelUrl, scene);
+                ladderMeshes = ladderImport.meshes;
+                ladderRoot = ladderMeshes.find((mesh) => !mesh.parent);
+            }
             if (!ladderRoot) {
                 throw new Error(
                     "SCAFFOLD LADDER.glb does not contain a root mesh"
                 );
             }
 
-            ladderRoot.name = "placedEgressLadder";
+            if (!sceneNodeName) ladderRoot.name = "placedEgressLadder";
             ladderRoot.metadata = {
                 trenchDevice: true,
                 type: "Egress ladder",
             };
-            ladderImport.meshes.forEach((mesh) => {
-                if (mesh.getTotalVertices() > 0) {
+            ladderMeshes.forEach((mesh) => {
+                if (mesh.getTotalVertices?.() > 0) {
+                    mesh.visibility = 1;
+                    mesh.isVisible = true;
                     mesh.checkCollisions = true;
                     mesh.isPickable = true;
                     mesh.metadata = {
@@ -1168,7 +1266,9 @@ export function setupTrenchPlanner({
             addEgressButton.textContent = config.buttons.egressAdded;
             completePlan({
                 summary:
-                    `${selectedConfiguration.summary} is positioned in the trench with a scaffold ladder for safe egress.`,
+                    sceneNodeName
+                        ? `${selectedConfiguration?.summary ?? protectionById.get(selectedProtection).label} configured with a scaffold ladder for egress.`
+                        : `${selectedConfiguration.summary} is positioned in the trench with a scaffold ladder for safe egress.`,
             });
         } catch (error) {
             console.error("Failed to add scaffold ladder", error);
@@ -1209,7 +1309,14 @@ export function setupTrenchPlanner({
     });
 
     submitMeasurements.addEventListener("click", () => {
+        if (submitMeasurements.disabled) return;
         recordCorrect("measurements");
+        if (config.measurementOnly) {
+            submitMeasurements.disabled = true;
+            measurementGuides.hidden = true;
+            completePlan({ summary: config.completion.dialogDescription, status: "Measurements recorded" });
+            return;
+        }
         measurementGuides.hidden = true;
         setFeedback(
             measurementFeedback,
@@ -1217,7 +1324,7 @@ export function setupTrenchPlanner({
             "correct"
         );
         protectionSection.classList.remove("is-locked");
-        document.querySelectorAll(".protection-option").forEach((option) => {
+        uiRoot.querySelectorAll(".protection-option").forEach((option) => {
             option.disabled = false;
         });
         submitMeasurements.disabled = true;

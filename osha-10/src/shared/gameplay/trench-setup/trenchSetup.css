@@ -215,7 +215,6 @@ body.planner-open .hazard-hint {
     border-radius: 50%;
     color: #11171b;
     background: #fbbf24;
-    font-size: 0.72rem;
     font-weight: 900;
 }
 
@@ -359,9 +358,7 @@ body.planner-open .hazard-hint {
     color: #111827;
     background: #fbbf24;
     cursor: pointer;
-    font-size: 0.75rem;
     font-weight: 850;
-    letter-spacing: 0.035em;
     white-space: nowrap;
 }
 
@@ -390,10 +387,6 @@ body.planner-open .hazard-hint {
 
 .geotechnical-report-action.is-reviewed + .geotechnical-report-status {
     color: #6ee7b7;
-}
-
-.measure-tape-icon {
-    font-size: 1.2rem;
 }
 
 .measurement-grid label {
@@ -488,11 +481,10 @@ body.planner-open .hazard-hint {
 }
 
 .configuration-option span {
-    overflow: hidden;
     color: #84929c;
     font-size: 0.6rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 
 .configuration-option:hover,
@@ -1045,4 +1037,36 @@ body.planner-open .hazard-hint {
         opacity: 0;
         transform: translate(-50%, 8px);
     }
+}
+
+/* One size for every trench activity button, including card details and dialogs. */
+.trench-activity-ui button,
+.trench-activity-ui button *,
+.measure-trench-action,
+.measure-trench-action span,
+.geotechnical-report-action,
+.geotechnical-report-action span {
+    font-size: 0.875rem;
+    line-height: 1.35;
+}
+
+.configuration-options--shielding {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+}
+
+.configuration-options--shielding .configuration-option {
+    width: 100%;
+    padding: 12px 14px;
+    gap: 6px;
+    text-align: left;
+}
+
+.trench-activity-ui .configuration-options--shielding .configuration-option span,
+.trench-activity-ui .configuration-options--shielding .configuration-dimensions {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    text-transform: none;
+    overflow-wrap: normal;
+    white-space: normal;
 }

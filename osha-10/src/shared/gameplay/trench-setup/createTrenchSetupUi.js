@@ -1,6 +1,6 @@
 import "./trenchSetup.css";
 import "../../ui/game-dialog/gameDialog.css";
-import { appendUi, requireUiElement } from "../../ui/dom/appendUi.js";
+import { appendUi } from "../../ui/dom/appendUi.js";
 
 const setText = (selector, value, root = document) => {
     const element = root.querySelector(selector);
@@ -11,9 +11,16 @@ const setText = (selector, value, root = document) => {
 export function createTrenchSetupUi({
     root = document.getElementById("app") ?? document.body,
     config,
+    idPrefix = "",
 }) {
-    if (document.getElementById("trenchPlanner")) return;
-    appendUi(root, `
+    const container = document.createElement("div");
+    container.className = "trench-activity-ui";
+    const requireUiElement = (id) => {
+        const element = container.querySelector(`[id="${id}"]`);
+        if (!element) throw new Error(`Missing trench interface element ${id}`);
+        return element;
+    };
+    appendUi(container, `
         <section id="trenchSetupPanel" class="trench-setup-panel" aria-live="polite" hidden>
             <div class="trench-setup-panel-copy"><span class="trench-setup-panel-icon" aria-hidden="true"></span><strong id="trenchSetupStatus"></strong></div>
             <button id="trenchSetupObjective" class="trench-setup-objective" type="button"></button>
@@ -149,7 +156,7 @@ export function createTrenchSetupUi({
     setText(".section-number", ui.review.number, review);
     setText("h2", ui.review.title, review);
 
-    const workspace = document.querySelector(".planner-workspace");
+    const workspace = container.querySelector(".planner-workspace");
     setText(".workspace-toolbar span", ui.workspace.viewLabel, workspace);
     requireUiElement("dimensionReadout").textContent = ui.workspace.notMeasured;
     workspace.querySelector(".measurement-guide-width .guide-label").textContent = ui.workspace.widthLabel;
@@ -175,4 +182,19 @@ export function createTrenchSetupUi({
     closeReport.textContent = ui.report.closeSymbol;
     closeReport.setAttribute("aria-label", ui.report.closeLabel);
     requireUiElement("acknowledgeGeotechnicalReport").textContent = ui.report.acknowledgeLabel;
+    const elements = new Map(
+        [...container.querySelectorAll("[id]")].map((element) => [element.id, element])
+    );
+    if (idPrefix) {
+        for (const element of elements.values()) element.id = `${idPrefix}-${element.id}`;
+        for (const element of container.querySelectorAll("[aria-labelledby], [aria-describedby], [for]")) {
+            for (const attribute of ["aria-labelledby", "aria-describedby", "for"]) {
+                if (!element.hasAttribute(attribute)) continue;
+                element.setAttribute(attribute, element.getAttribute(attribute).split(/\s+/)
+                    .map((id) => elements.has(id) ? `${idPrefix}-${id}` : id).join(" "));
+            }
+        }
+    }
+    root.append(container);
+    return { container, getElement: (id) => elements.get(id) };
 }

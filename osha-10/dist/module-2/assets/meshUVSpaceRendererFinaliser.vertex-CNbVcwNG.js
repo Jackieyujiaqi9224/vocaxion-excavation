@@ -1,0 +1,2 @@
+import{n as e,r as t}from"./rolldown-runtime-B0Z9INg1.js";import{n,t as r}from"./shaderStore-DBiNfWDC.js";var i=t({meshUVSpaceRendererFinaliserVertexShader:()=>s}),a,o,s,c=e((()=>{n(),a=`meshUVSpaceRendererFinaliserVertexShader`,o=`precision highp float;attribute vec3 position;attribute vec2 uv;uniform mat4 worldViewProjection;varying vec2 vUV;void main() {gl_Position=worldViewProjection*vec4(position,1.0);vUV=uv;}
+`,r.ShadersStore[a]||(r.ShadersStore[a]=o),s={name:a,shader:o}}));export{s as n,i as r,c as t};

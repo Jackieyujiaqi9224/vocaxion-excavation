@@ -12,12 +12,12 @@ export const stormComicConfig = Object.freeze({
     }),
     presentation: Object.freeze({
         background: Object.freeze({
-            src: publicAssetUrl("Graphic%20Novel/Storm.jpg"),
+            src: publicAssetUrl("Graphic%20Novel/Storm.webp"),
             alt: "A storm arriving over the excavation worksite",
         }),
         speaker: Object.freeze({
             label: "JORDAN · SITE SAFETY MENTOR",
-            portraitSrc: publicAssetUrl("Graphic%20Novel/Headshot.jpg"),
+            portraitSrc: publicAssetUrl("Graphic%20Novel/Headshot.webp"),
             portraitAlt: "Site safety mentor Jordan",
         }),
         completionMentorMessage:

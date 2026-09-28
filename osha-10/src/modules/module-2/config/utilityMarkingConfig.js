@@ -3,7 +3,7 @@ const publicAssetUrl = (path) => `${import.meta.env.BASE_URL}${path}`;
 export const utilityMarkingConfig = Object.freeze({
     id: "excavation-811",
     background: Object.freeze({
-        src: publicAssetUrl("2D%20Assets/excavationbirdview.jpg"),
+        src: publicAssetUrl("2D%20Assets/excavationbirdview.webp"),
         alt: "Bird's-eye view of an excavation worksite",
     }),
     callToAction: Object.freeze({

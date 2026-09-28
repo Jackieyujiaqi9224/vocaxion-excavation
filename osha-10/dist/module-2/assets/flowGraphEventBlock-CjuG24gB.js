@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-B0Z9INg1.js";import{n as t,t as n}from"./flowGraphAsyncExecutionBlock-3NHuQ3QZ.js";var r,i=e((()=>{t(),r=class extends n{constructor(){super(...arguments),this.initPriority=0,this.type=`NoTrigger`}_execute(e){e._notifyExecuteNode(this),this.done._activateSignal(e)}}}));export{i as n,r as t};

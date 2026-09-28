@@ -11,9 +11,41 @@ uses the shared HTML shell and shared mechanics, but Vite aliases
 
 Each target has a matching `src/modules/module-N/module.js` entry. Module 2's
 excavation implementation lives directly under `src/modules/module-2`.
-Module 1 loads `Scenario1.glb`, begins with its
-hazard-identification step, and then opens its module-owned trench-protection
-scenario. Modules 3–6 currently have scaffold entries that can be replaced as
+Module 1 loads `Scenario1.glb`, begins with an 811 activity using
+`module1_811.webp` and a yellow gas line across the white-lined trench area,
+continues to hazard identification, and then opens its module-owned trench-protection
+scenario. After the deepening dialogue and second hazard inspection, Module 1
+opens a separate measurement activity using `Camera Position_2` and the `_02`
+measurement markers. After recording measurements, learners select protection;
+shielding previews Shield A and asks for a Small or Large size. Large switches
+the preview to Shield B; Small uses Shield A. Both shields start at their
+authored positions and cannot be dragged during size selection.
+Submitting Large explains that it is acceptable but oversized and requires Small
+to continue. Submitting Small unlocks vertical dragging. On release, Shield A
+snaps to the nearest height among `Shield_A_Pos_01` through `Shield_A_Pos_04`,
+using that marker's world position. These reference meshes are hidden at load.
+The default correct submission point is `Shield_A_Pos_01`; the preview's
+`correctSnapNodeName` option can select another. Submit placement to continue
+to egress.
+Shield edge guides appear only during placement, after Small is submitted, and
+update during dragging and snapping. Position 01 is calibrated
+to 2 ft above the trench top and 0 ft at the trench bottom; other positions use
+their height offsets and the trench measurement scale. Distances below an edge
+are labeled "below".
+Sloping asks for an angle (53, 45, or
+34 degrees). Submitting 53 degrees replaces the large trench base with the
+sloped base and advances to egress. Other angles and None require another
+choice. Add egress reveals `Scaffold_Ladder_Slope` for sloping or
+`Scaffold_Ladder` for shielding. Both ladders are initially hidden. The activity
+completes only after the selected ladder is added.
+After leaving the second trench planner, `COL_Dump_Truck` vibrates for three
+seconds while the camera shakes and `Sound Effects/Dump Truck.mp3` plays. The truck
+and camera positions are restored
+before the separate `Scenario-02.webp` comic opens. After an introductory page,
+learners choose a response to the vibration. Moving the truck away, keeping
+workers out, and requesting reassessment completes the scenario; the other
+responses require another attempt.
+Modules 3–6 currently have scaffold entries that can be replaced as
 their scenes are implemented.
 
 Common commands:

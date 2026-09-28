@@ -5,6 +5,7 @@ import "@babylonjs/core/Layers/effectLayerSceneComponent.js";
 import { Color3 } from "@babylonjs/core/Maths/math.color.js";
 import { playCorrectAnswerSound } from "../audio/gameFeedbackSounds.js";
 import { createHazardIdentificationUi } from "./hazard-identification/createHazardIdentificationUi.js";
+import { createHazardHitArea } from "./createHazardHitArea.js";
 
 function getRequiredElement(id, hazardId) {
     const element = document.getElementById(id);
@@ -47,6 +48,20 @@ export function setupClickableHazard({
         mesh.isPickable = true;
         return mesh;
     });
+    // Treat a multipart object as one hazard regardless of which part is hit.
+    const hazardRootByMesh = new Map();
+    hazardMeshes.forEach((root) => {
+        const parts = definition.includeDescendants ? [root, ...root.getChildMeshes()] : [root];
+        parts.forEach((mesh) => hazardRootByMesh.set(mesh, root));
+    });
+    const hitAreas = new Set();
+    if (definition.hitAreaPadding > 0) {
+        hazardMeshes.forEach((root) => {
+            const hitArea = createHazardHitArea(root, definition.hitAreaPadding);
+            hitAreas.add(hitArea);
+            hazardRootByMesh.set(hitArea, root);
+        });
+    }
     const configuredMeshes = new Map();
     const meshStateDefinitions = [
         ...(definition.initialMeshStates ?? []),
@@ -103,7 +118,7 @@ export function setupClickableHazard({
     const identifiedMeshes = new Set();
     const completionListeners = new Set();
 
-    hazardMeshes.forEach((mesh) => {
+    hazardRootByMesh.forEach((_root, mesh) => {
         mesh.isPickable = false;
     });
 
@@ -116,7 +131,9 @@ export function setupClickableHazard({
 
     const clearHighlight = () => {
         if (!hoveredMesh) return;
-        highlightLayer.removeMesh(hoveredMesh);
+        hazardRootByMesh.forEach((root, mesh) => {
+            if (root === hoveredMesh && !hitAreas.has(mesh)) highlightLayer.removeMesh(mesh);
+        });
         hoveredMesh = null;
         canvas.classList.remove(definition.cursorClass);
     };
@@ -127,7 +144,9 @@ export function setupClickableHazard({
 
         if (canInteract(mesh)) {
             hoveredMesh = mesh;
-            highlightLayer.addMesh(mesh, highlightColor);
+            hazardRootByMesh.forEach((root, part) => {
+                if (root === mesh && !hitAreas.has(part)) highlightLayer.addMesh(part, highlightColor);
+            });
             canvas.classList.add(definition.cursorClass);
         }
     };
@@ -155,9 +174,9 @@ export function setupClickableHazard({
             scene.pointerX,
             scene.pointerY,
             (mesh) =>
-                hazardMeshes.includes(mesh) && !resolvedMeshes.has(mesh)
+                hazardRootByMesh.has(mesh) && !resolvedMeshes.has(hazardRootByMesh.get(mesh))
         );
-        const hazardMesh = hazardPick?.hit ? hazardPick.pickedMesh : null;
+        const hazardMesh = hazardPick?.hit ? hazardRootByMesh.get(hazardPick.pickedMesh) : null;
 
         if (pointerInfo.type === PointerEventTypes.POINTERMOVE) {
             setHighlightedMesh(hazardMesh);
@@ -200,6 +219,9 @@ export function setupClickableHazard({
             applyMeshState(configuredMeshes.get(state.meshName), state);
         });
         resolvedMeshes.add(resolvedMesh);
+        hazardRootByMesh.forEach((root, mesh) => {
+            if (root === resolvedMesh) mesh.isPickable = false;
+        });
         closeDialog();
 
         if (
@@ -227,14 +249,14 @@ export function setupClickableHazard({
             definition.activationMeshStates?.forEach((state) => {
                 applyMeshState(configuredMeshes.get(state.meshName), state);
             });
-            hazardMeshes.forEach((mesh) => {
-                if (!resolvedMeshes.has(mesh)) mesh.isPickable = true;
+            hazardRootByMesh.forEach((root, mesh) => {
+                if (!resolvedMeshes.has(root)) mesh.isPickable = true;
             });
         },
         deactivate() {
             isActive = false;
             clearHighlight();
-            hazardMeshes.forEach((mesh) => {
+            hazardRootByMesh.forEach((_root, mesh) => {
                 mesh.isPickable = false;
             });
             closeDialog();

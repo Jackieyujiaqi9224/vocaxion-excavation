@@ -1,6 +1,7 @@
 import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial.js";
 import { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder.js";
-import { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder.js";
+import { Mesh } from "@babylonjs/core/Meshes/mesh.js";
+import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData.js";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode.js";
 
 export function createNavigationArrow(scene, player) {
@@ -11,6 +12,30 @@ export function createNavigationArrow(scene, player) {
     material.emissiveColor.set(0.35, 0.18, 0.01);
     material.metallic = 0.05;
     material.roughness = 0.85;
+    material.backFaceCulling = false;
+
+    const createTriangle = (name, positions, thicknessAxis, thickness) => {
+        const mesh = new Mesh(name, scene);
+        const data = new VertexData();
+        const halfThickness = thickness / 2;
+        data.positions = [-1, 1].flatMap((side) =>
+            positions.map((value, index) =>
+                value + side * halfThickness * thicknessAxis[index % 3]
+            )
+        );
+        data.indices = [
+            0, 1, 2, 3, 5, 4,
+            0, 3, 4, 0, 4, 1,
+            1, 4, 5, 1, 5, 2,
+            2, 5, 3, 2, 3, 0,
+        ];
+        data.normals = [];
+        VertexData.ComputeNormals(data.positions, data.indices, data.normals);
+        data.applyToMesh(mesh);
+        mesh.convertToFlatShadedMesh();
+        mesh.material = material;
+        return mesh;
+    };
 
     const shaft = CreateBox(
         "navigationArrowShaft",
@@ -21,12 +46,12 @@ export function createNavigationArrow(scene, player) {
     shaft.material = material;
     shaft.parent = root;
 
-    const head = CreateCylinder(
+    const head = createTriangle(
         "navigationArrowHead",
-        { diameterTop: 0, diameterBottom: 0.72, height: 0.8, tessellation: 32 },
-        scene
+        [-0.36, 0, -0.4, 0.36, 0, -0.4, 0, 0, 0.4],
+        [0, 1, 0],
+        0.18
     );
-    head.rotation.x = Math.PI / 2;
     head.position.z = 0.95;
     head.material = material;
     head.parent = root;
@@ -40,12 +65,14 @@ export function createNavigationArrow(scene, player) {
     markerShaft.material = material;
     markerShaft.parent = targetMarker;
 
-    // A cylinder points along Y. With a zero bottom diameter, its tip points down.
-    const markerHead = CreateCylinder(
+    const markerHead = createTriangle(
         "hazardTargetMarkerHead",
-        { diameterTop: 0.9, diameterBottom: 0, height: 0.8, tessellation: 32 },
-        scene
+        [-0.45, 0.4, 0, 0.45, 0.4, 0, 0, -0.4, 0],
+        [0, 0, 1],
+        0.3
     );
+    // Keep the flat downward tip facing the camera as the player moves.
+    markerHead.billboardMode = Mesh.BILLBOARDMODE_Y;
     markerHead.material = material;
     markerHead.parent = targetMarker;
 

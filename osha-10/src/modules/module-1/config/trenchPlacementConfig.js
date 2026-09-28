@@ -1,5 +1,6 @@
 export const trenchPlacementConfig = Object.freeze({
     id: "module-1-small-type-a-trench",
+    requirePreferredProtection: true,
     ui: Object.freeze({
         plannerAriaLabel: "Trench protection planner",
         objective: Object.freeze({
@@ -93,10 +94,16 @@ export const trenchPlacementConfig = Object.freeze({
     trenchDimensions: Object.freeze({ length: 20, width: 5, depth: 4 }),
     sceneNodes: Object.freeze({
         cameraPosition: "Camera Position_1",
+        useAuthoredCameraRotation: true,
+        // Blender camera axes (-Z forward, +Y up), converted by the Y-up
+        // glTF export of an Empty: -Y forward and -Z up.
+        cameraForwardAxis: Object.freeze([0, -1, 0]),
+        cameraUpAxis: Object.freeze([0, 0, -1]),
+        // Vertical field of view in radians: smaller zooms in, larger zooms out.
         cameraFieldOfView: 1.4,
-        depthTop: "y1_01.001",
-        measurementCross: "yx cross_01.001",
-        widthLeft: "x1_01.001",
+        depthTop: "y1_01",
+        measurementCross: "yx cross_01",
+        widthLeft: "x1_01",
     }),
     geotechnicalReport: Object.freeze({
         soilType: "TYPE A",
@@ -137,7 +144,7 @@ export const trenchPlacementConfig = Object.freeze({
             assessment: "acceptable",
             completeOnSelection: true,
             acceptedFeedback:
-                "Sloping is acceptable, but it increases excavation and restoration costs unnecessarily for this scenario.",
+                "Sloping is acceptable, but it is overprotection and a waste of resources for this scenario. Select None to finish.",
             acceptedStatus: "Sloping accepted — unnecessary added cost",
             completionSummary:
                 "Sloping would provide protection, but it is unnecessary for this scenario and adds avoidable excavation and restoration cost.",
@@ -151,7 +158,7 @@ export const trenchPlacementConfig = Object.freeze({
             assessment: "acceptable",
             completeOnSelection: true,
             acceptedFeedback:
-                "Shielding is acceptable, but equipment, setup, and handling costs are unnecessary for this scenario.",
+                "Shielding is acceptable, but it is overprotection and a waste of resources for this scenario. Select None to finish.",
             acceptedStatus: "Shielding accepted — unnecessary added cost",
             completionSummary:
                 "Shielding would provide protection, but it is unnecessary for this scenario and adds avoidable equipment and setup cost.",
@@ -167,7 +174,7 @@ export const trenchPlacementConfig = Object.freeze({
         addingEgress: "Adding egress…",
         egressAdded: "Egress added",
         retryEgress: "Try adding egress again",
-        returnToScene: "Return to site",
+        returnToScene: "Continue",
     }),
     egress: Object.freeze({ enabled: false }),
     completion: Object.freeze({

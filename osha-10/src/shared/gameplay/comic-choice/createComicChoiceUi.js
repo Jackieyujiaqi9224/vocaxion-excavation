@@ -1,19 +1,21 @@
 import "./comicChoice.css";
-import { appendUi, requireUiElement } from "../../ui/dom/appendUi.js";
+import { appendUi } from "../../ui/dom/appendUi.js";
 
 export function createComicChoiceUi({
     root = document.getElementById("app") ?? document.body,
     config,
+    idPrefix = "",
 }) {
-    if (document.getElementById("stormScene")) return;
-    appendUi(root, `
+    const container = document.createElement("div");
+    const requireUiElement = (id) => container.querySelector(`[id="${id}"]`);
+    appendUi(container, `
         <section id="stormScene" class="storm-scene" aria-labelledby="stormDialogueTitle" tabindex="-1" hidden>
             <img id="stormSceneBackground" class="storm-scene-background" alt="">
             <div class="storm-dialogue">
                 <img id="stormDialogueHeadshot" class="storm-dialogue-headshot" alt="">
                 <div class="storm-dialogue-copy">
                     <span></span><strong id="stormDialogueTitle"></strong><p id="stormDialogueBody" hidden></p>
-                    <div id="stormSafetyQuestion" class="storm-safety-question" hidden><p id="stormAnswerFeedback" aria-live="polite"></p></div>
+                    <div id="stormSafetyQuestion" class="storm-safety-question" hidden><p id="stormAnswerFeedback" data-comic-feedback aria-live="polite"></p></div>
                 </div>
                 <nav class="storm-dialogue-navigation">
                     <button id="previousStormDialogue" type="button" disabled></button>
@@ -24,7 +26,7 @@ export function createComicChoiceUi({
         </section>
     `);
     const navigation = config.navigation;
-    const nav = document.querySelector(".storm-dialogue-navigation");
+    const nav = container.querySelector(".storm-dialogue-navigation");
     nav.setAttribute("aria-label", navigation.ariaLabel);
     const previous = requireUiElement("previousStormDialogue");
     previous.textContent = navigation.previousSymbol;
@@ -32,4 +34,11 @@ export function createComicChoiceUi({
     const next = requireUiElement("nextStormDialogue");
     next.textContent = navigation.nextSymbol;
     next.setAttribute("aria-label", navigation.nextLabel);
+    const elements = new Map([...container.querySelectorAll("[id]")].map(element => [element.id, element]));
+    if (idPrefix) {
+        for (const element of elements.values()) element.id = `${idPrefix}-${element.id}`;
+        elements.get("stormScene").setAttribute("aria-labelledby", elements.get("stormDialogueTitle").id);
+    }
+    root.append(container);
+    return { getElement: (id) => elements.get(id) };
 }

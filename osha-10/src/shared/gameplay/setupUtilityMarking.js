@@ -45,6 +45,13 @@ function validateConfig(config) {
             );
         }
     });
+    const line = config.markingInspection.line;
+    if (line && (
+        ![line.start?.x, line.start?.y, line.end?.x, line.end?.y].every(Number.isFinite) ||
+        (line.start.x === line.end.x && line.start.y === line.end.y)
+    )) {
+        throw new Error(`811 config ${config.id} needs distinct numeric utility line endpoints`);
+    }
     const methodIds = new Set(config.excavationStage.methods.map(
         (method) => method.id
     ));
@@ -109,6 +116,7 @@ export function setupUtilityMarking({ canvas, config, scoring }) {
     const inspectionHelp = requireElement("utilityInspectionHelp");
     const toleranceReminder = requireElement("toleranceReminder");
     const flagLayer = requireElement("utilityFlagLayer");
+    const markedLine = requireElement("utilityMarkedLine");
     const zoneLayer = requireElement("digZoneLayer");
     const utilityQuiz = requireElement("utilityQuiz");
     const utilityTitle = requireElement("utilityQuizTitle");
@@ -197,6 +205,13 @@ export function setupUtilityMarking({ canvas, config, scoring }) {
     const positionInteractiveElements = () => {
         if (!background.naturalWidth || !background.naturalHeight) return;
         const { scale, offsetX, offsetY } = getImageTransform();
+        if (inspection.line) {
+            const { start, end } = inspection.line;
+            markedLine.style.left = `${offsetX + start.x * scale}px`;
+            markedLine.style.top = `${offsetY + start.y * scale}px`;
+            markedLine.style.width = `${Math.hypot(end.x - start.x, end.y - start.y) * scale}px`;
+            markedLine.style.transform = `translateY(-50%) rotate(${Math.atan2(end.y - start.y, end.x - start.x)}rad)`;
+        }
 
         [...flagLayer.children].forEach((flag, index) => {
             const position = inspection.positions[index];
@@ -239,6 +254,7 @@ export function setupUtilityMarking({ canvas, config, scoring }) {
         callCard.hidden = true;
         inspectionPanel.hidden = false;
         flagLayer.hidden = false;
+        markedLine.hidden = !inspection.line;
         positionInteractiveElements();
     };
 

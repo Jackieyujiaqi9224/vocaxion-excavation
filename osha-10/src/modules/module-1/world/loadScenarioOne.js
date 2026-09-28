@@ -11,18 +11,27 @@ const invisibleColliderPrefixes = Object.freeze([
     "COL_Large_Base",
 ]);
 const initiallyHiddenNodeNames = Object.freeze([
+    "Large1",
+    "Small1",
+    "34 slope",
+    "COL_Large_Base",
     "Shield A",
+    "COL_Slope_Base",
     "Shield B",
     "Scaffold_Ladder",
+    "Scaffold_Ladder_Slope",
     "Tool ",
     "Dressed",
 ]);
 const SMALL_TRENCH_LENGTH = 20;
+// The large trench extends to approximately world X=20.3. Place the
+// movable cone row beyond that end, preserving its authored height and span.
+const LARGE_TRENCH_CONE_WORLD_X = 22;
 const smallTrenchNodeNames = Object.freeze({
     base: "COL_Small_Base",
-    depthTop: "y1_01.001",
-    measurementCross: "yx cross_01.001",
-    widthLeft: "x1_01.001",
+    depthTop: "y1_01",
+    measurementCross: "yx cross_01",
+    widthLeft: "x1_01",
 });
 
 const isInvisibleCollider = (name) =>
@@ -52,6 +61,9 @@ export async function loadScenarioOne(scene) {
     });
 
     const smallBase = scene.getMeshByName(smallTrenchNodeNames.base);
+    const largeBase = scene.getMeshByName("COL_Large_Base");
+    const slopeBase = scene.getMeshByName("COL_Slope_Base");
+    const movableCone = scene.getMeshByName("COL_SM_Prop_Cone_Movable");
     const depthTop = scene.getTransformNodeByName(
         smallTrenchNodeNames.depthTop
     );
@@ -61,9 +73,46 @@ export async function loadScenarioOne(scene) {
     const widthLeft = scene.getTransformNodeByName(
         smallTrenchNodeNames.widthLeft
     );
-    if (!smallBase || !depthTop || !measurementCross || !widthLeft) {
+    if (!smallBase || !largeBase || !depthTop || !measurementCross || !widthLeft) {
         throw new Error("Scenario 1 is missing the small trench setup nodes");
     }
+    if (!movableCone) {
+        throw new Error("Scenario 1 is missing COL_SM_Prop_Cone_Movable");
+    }
+    largeBase.checkCollisions = false;
+    if (!slopeBase) {
+        throw new Error("Scenario 1 is missing COL_Slope_Base");
+    }
+    slopeBase.checkCollisions = false;
+
+    const slopeTrench = () => {
+        largeBase.setEnabled(false);
+        largeBase.visibility = 0;
+        largeBase.isPickable = false;
+        largeBase.checkCollisions = false;
+        slopeBase.setEnabled(true);
+        slopeBase.visibility = 1;
+        slopeBase.isPickable = true;
+        slopeBase.checkCollisions = true;
+        slopeBase.computeWorldMatrix(true);
+    };
+
+    const deepenTrench = () => {
+        smallBase.setEnabled(false);
+        smallBase.visibility = 0;
+        smallBase.isPickable = false;
+        smallBase.checkCollisions = false;
+        largeBase.setEnabled(true);
+        largeBase.visibility = 1;
+        largeBase.isPickable = true;
+        largeBase.checkCollisions = true;
+        largeBase.computeWorldMatrix(true);
+        movableCone.computeWorldMatrix(true);
+        const conePosition = movableCone.getAbsolutePosition().clone();
+        conePosition.x = LARGE_TRENCH_CONE_WORLD_X;
+        movableCone.setAbsolutePosition(conePosition);
+        movableCone.computeWorldMatrix(true);
+    };
     [depthTop, measurementCross, widthLeft].forEach((node) =>
         node.computeWorldMatrix(true)
     );
@@ -97,5 +146,7 @@ export async function loadScenarioOne(scene) {
         animationGroups: result.animationGroups,
         initiallyHiddenNodes,
         trench,
+        deepenTrench,
+        slopeTrench,
     });
 }

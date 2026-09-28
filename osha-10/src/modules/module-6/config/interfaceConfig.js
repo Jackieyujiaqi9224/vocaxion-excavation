@@ -6,19 +6,19 @@ export const interfaceConfig = Object.freeze({
         loadingLabel: "Loading game…",
         readyLabel: "Start",
         background: Object.freeze({
-            src: publicAssetUrl("2D%20Assets/Background.jpg"),
+            src: publicAssetUrl("2D%20Assets/Background.webp"),
             alt: "",
         }),
         partnerLabel: "Project partners",
         logos: Object.freeze([
             Object.freeze({
-                src: publicAssetUrl("2D%20Assets/Vocaxion_logo.png"),
+                src: publicAssetUrl("2D%20Assets/Vocaxion_logo.webp"),
                 alt: "Vocaxion",
                 width: 668,
                 height: 185,
             }),
             Object.freeze({
-                src: publicAssetUrl("2D%20Assets/WorkInRoads_logo.png"),
+                src: publicAssetUrl("2D%20Assets/WorkInRoads_logo.webp"),
                 alt: "Work in Roads",
                 width: 300,
                 height: 108,
