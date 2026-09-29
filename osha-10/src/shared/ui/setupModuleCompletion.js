@@ -7,17 +7,11 @@ export function setupModuleCompletion({ onComplete, scoring }) {
     const saveStatus = document.createElement("p");
     saveStatus.setAttribute("role", "status");
     saveStatus.hidden = true;
-    const retryButton = document.createElement("button");
-    retryButton.type = "button";
-    retryButton.className = "hazard-action";
-    retryButton.textContent = "Retry saving";
-    retryButton.hidden = true;
-    exitButton.before(saveStatus, retryButton);
+    exitButton.before(saveStatus);
     let isScheduled = false;
 
     const saveCompletion = async () => {
         exitButton.disabled = true;
-        retryButton.hidden = true;
         saveStatus.hidden = false;
         saveStatus.textContent = "Saving your result…";
         try {
@@ -26,13 +20,11 @@ export function setupModuleCompletion({ onComplete, scoring }) {
             saveStatus.textContent = result?.status === "saved" ? "Your result has been saved." : "";
         } catch (error) {
             console.error("Could not save module completion:", error);
-            saveStatus.textContent = "Your result could not be saved. Retry before exiting; exiting now may lose this result.";
-            retryButton.hidden = false;
+            saveStatus.textContent = "Your result could not be saved. Your completion may not appear on the website.";
         } finally {
             exitButton.disabled = false;
         }
     };
-    retryButton.addEventListener("click", saveCompletion);
 
     dialog.addEventListener("cancel", (event) => {
         event.preventDefault();

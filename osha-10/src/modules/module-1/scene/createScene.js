@@ -129,5 +129,5 @@ export async function createScene({
         setupInspectorShortcut(scene);
     }
 
-    return { scene, start: gameFlow.start };
+    return { scene, start: gameFlow.start, complete: moduleCompletion.activate };
 }

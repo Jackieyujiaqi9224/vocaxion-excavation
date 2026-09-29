@@ -94,6 +94,28 @@
     transform: translateX(-50%);
 }
 
+.test-completion-button {
+    position: absolute;
+    z-index: 2;
+    top: 16px;
+    right: 16px;
+    min-height: 44px;
+    padding: 10px 16px;
+    border: 2px solid #fbbf24;
+    border-radius: 8px;
+    background: #101820;
+    color: #fff;
+    cursor: pointer;
+    opacity: 0;
+}
+
+.test-completion-button:hover:not(:disabled),
+.test-completion-button:focus-visible {
+    opacity: 1;
+    outline: 2px solid #fff;
+    outline-offset: 3px;
+}
+
 .start-screen-logos img {
     width: auto;
     max-width: min(32vw, 185px);
@@ -111,4 +133,3 @@
         height: 32px;
     }
 }
-

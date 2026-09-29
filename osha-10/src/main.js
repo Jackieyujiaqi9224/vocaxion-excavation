@@ -99,6 +99,7 @@ async function main() {
 
     let scene;
     let start;
+    let complete;
     try {
         const created = await createScene({
             engine,
@@ -114,6 +115,7 @@ async function main() {
         });
         scene = created?.scene;
         start = created?.start;
+        complete = created?.complete;
         if (!scene) {
             throw new Error(`${moduleMetadata.title} did not return a scene`);
         }
@@ -131,6 +133,12 @@ async function main() {
     }
     const startScreen = setupStartScreen({
         readyLabel: interfaceConfig.startScreen.readyLabel,
+        onTestComplete: typeof complete === "function" ? () => {
+            // Skip gameplay and leave the timer unstarted so elapsed time is zero.
+            scoring.reset();
+            backgroundMusic?.pause();
+            complete();
+        } : undefined,
         onStart: () => {
             scoring.reset();
             if (moduleMetadata.status !== "scaffold") {

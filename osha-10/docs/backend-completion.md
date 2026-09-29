@@ -27,6 +27,13 @@ time in activity dialogs and background tabs. The score is the final points
 total, not a percentage; negative scores are possible. Future modules using the
 shared completion callback inherit this integration.
 
+For integration testing, Modules 1 and 2 have an invisible button 16px from the
+top-right corner of the start screen. Hover over it or press Tab from Start to
+highlight "Test completion". Clicking it (or pressing Enter while focused) skips
+gameplay, opens the completion dialog, and sends the normal completion payload
+with `score: 0` and `elapsedSeconds: 0`. It requires the same configured endpoint
+and website session as normal completion and is included in production builds.
+
 The backend should:
 
 - Authenticate the learner from the website session. Requests include cookies;
@@ -43,8 +50,8 @@ The backend should:
   that into the request using the website's token mechanism during integration.
 
 The completion dialog shows saving/success/failure status. Exit is temporarily
-disabled during the request (10-second timeout); on failure the learner can retry
-or exit. Retries preserve the original result and submission ID. Pending results
+disabled during the request (10-second timeout); on failure the learner sees an
+error message and can exit. The completion dialog has no manual save or retry button. Pending results
 are kept in memory only: closing or refreshing the page can lose an unsaved
 result. `keepalive` allows an already-started request to continue during navigation
 where supported, but does not guarantee delivery.

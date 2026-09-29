@@ -9,6 +9,7 @@ export function createStartScreenUi({ root, config }) {
                 <h1 id="startScreenTitle"></h1>
                 <button id="startGame" class="start-game-button" type="button" disabled></button>
             </div>
+            <button id="testCompletion" class="test-completion-button" type="button" disabled hidden aria-label="Test course completion with zero score and time">Test completion</button>
             <footer class="start-screen-logos"></footer>
         </section>
     `);

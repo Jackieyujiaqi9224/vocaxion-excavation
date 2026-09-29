@@ -1,6 +1,9 @@
-export function setupStartScreen({ onStart, readyLabel }) {
+export function setupStartScreen({ onStart, onTestComplete, readyLabel }) {
     const screen = document.getElementById("startScreen");
     const startButton = document.getElementById("startGame");
+    const testButton = document.getElementById("testCompletion");
+    let hasStarted = false;
+    testButton.hidden = typeof onTestComplete !== "function";
     const setBackgroundInert = (inert) => {
         [...screen.parentElement.children].forEach((element) => {
             if (element !== screen) element.inert = inert;
@@ -13,12 +16,16 @@ export function setupStartScreen({ onStart, readyLabel }) {
         setBackgroundInert(true);
         screen.setAttribute("aria-busy", "false");
         startButton.disabled = false;
+        testButton.disabled = testButton.hidden;
         startButton.textContent = readyLabel;
         startButton.focus();
     };
 
     startButton.addEventListener("click", () => {
+        if (hasStarted || startButton.disabled) return;
+        hasStarted = true;
         startButton.disabled = true;
+        testButton.disabled = true;
         onStart();
         screen.classList.add("is-leaving");
         let hasFinished = false;
@@ -42,6 +49,16 @@ export function setupStartScreen({ onStart, readyLabel }) {
         };
         screen.addEventListener("transitionend", onTransitionEnd);
         fallbackTimer = window.setTimeout(finish, 500);
+    });
+
+    testButton.addEventListener("click", () => {
+        if (hasStarted || testButton.disabled || testButton.hidden) return;
+        hasStarted = true;
+        startButton.disabled = true;
+        testButton.disabled = true;
+        screen.hidden = true;
+        setBackgroundInert(false);
+        onTestComplete();
     });
 
     return { markReady };
